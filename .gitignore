@@ -1,0 +1,91 @@
+# ==========================
+# Variables de entorno / secretos
+# ==========================
+.env
+.env.*
+!.env.example
+
+# ==========================
+# Python (backend)
+# ==========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# ==========================
+# Node / Frontend
+# ==========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+dist/
+build/
+.cache/
+.parcel-cache/
+.vite/
+
+# ==========================
+# Logs
+# ==========================
+*.log
+logs/
+
+# ==========================
+# Docker
+# ==========================
+*.pid
+
+# ==========================
+# Editor / IDE
+# ==========================
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# ==========================
+# Sistema Operativo
+# ==========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==========================
+# Bases de datos locales
+# ==========================
+*.sqlite3
+*.db
+
+# ==========================
+# Coverage / Tests
+# ==========================
+coverage/
+htmlcov/
+.coverage
+.tox/
+
