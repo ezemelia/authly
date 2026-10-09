@@ -1,3 +1,12 @@
-fastapi
-uvicorn
-psycopg2-binary
+psycopg==3.3.6
+psycopg-binary==3.3.6
+pytest==9.1.1
+python-dotenv==1.2.4
+bcrypt==5.0.0
+fastapi==0.142.2
+uvicorn==0.54.0
+pydantic==2.13.5
+email-validator==2.3.0
+httpx==0.28.1
+PyJWT==2.15.1
+cryptography==50.0.2
