@@ -1,0 +1,289 @@
+input, textarea {
+    padding: 10px;
+    border: 1px solid var(--texto-secundario);
+    border-radius: 6px;
+    background-color: var(--fondo-campo);
+    color: var(--texto-principal);
+    width: 100%;
+}
+
+input:focus, textarea:focus {
+    border-color: var(--color-primario);
+    outline: none;
+    box-shadow: 0 0 0 1px var(--color-primario-hover);
+}
+
+textarea {
+    resize: vertical;
+}
+
+button {
+    background-color: var(--color-primario);
+    color: var(--texto-sobre-primario);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    padding: 12px 24px;
+}
+
+button:hover {
+    background-color: var(--boton-hover);
+}
+
+.mensaje-error {
+    color: var(--error);
+    font-size: 14px;
+    margin-top: 6px;
+}
+
+.mensaje-exito {
+    color: var(--exito);
+    font-size: 14px;
+    margin-top: 6px;
+}
+
+.boton-secundario {
+    background-color: transparent;
+    color: var(--color-titulo);
+    border: 1px solid var(--color-titulo);
+    margin-left: 12px;
+}
+
+.boton-secundario:hover {
+    background-color: var(--color-primario);
+    color: var(--texto-sobre-primario);
+}
+
+.boton-enlace {
+    display: inline-block;
+    background-color: var(--color-primario);
+    color: var(--texto-sobre-primario);
+    padding: 12px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.boton-enlace:hover {
+    background-color: var(--boton-hover);
+    color: var(--texto-sobre-primario);
+}
+
+.icono-exito {
+    color: var(--exito);
+    display: block;
+    margin-bottom: 12px;
+}
+
+.boton-enlace-secundario {
+    background-color: transparent;
+    color: var(--color-titulo);
+    border: 1px solid var(--color-titulo);
+    padding: 11px 24px;
+}
+
+.boton-enlace-secundario:hover {
+    background-color: var(--color-primario);
+    color: var(--texto-sobre-primario);
+}
+
+.logo {
+    height: 80px;
+    display: block;
+}
+
+.oscuro {
+    display: none;
+}
+
+:root[data-tema="oscuro"] .claro {
+    display: none;
+}
+
+:root[data-tema="oscuro"] .oscuro {
+    display: block;
+}
+
+label {
+    display: block;
+    margin-top: 20px;
+}
+
+input[type="checkbox"] {
+    width: auto;
+    margin-top: 12px;
+}
+
+.botones-formulario {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+}
+
+.botones-formulario button {
+    margin-top: 0;
+}
+
+.boton-peligro {
+    background-color: var(--peligro);
+}
+
+.boton-peligro:hover {
+    background-color: var(--peligro-hover);
+}
+
+.boton-peligro-borde {
+    background-color: transparent;
+    color: var(--error);
+    border: 1px solid var(--error);
+}
+
+.boton-peligro-borde:hover {
+    background-color: var(--peligro);
+    color: var(--texto-sobre-primario);
+}
+
+.contenedor-toasts {
+    position: fixed;
+    top: 64px;
+    right: 16px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 360px;
+    max-width: calc(100vw - 32px);
+}
+
+.toast {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    background-color: var(--fondo-secundario);
+    color: var(--texto-principal);
+    border: 1px solid var(--color-borde);
+    border-radius: 8px;
+}
+
+.toast::before {
+    content: "";
+    flex-shrink: 0;
+    width: 10px;
+    height: 10px;
+    margin-top: 6px;
+    border-radius: 50%;
+    background-color: var(--color-borde);
+}
+
+.toast-exito {
+    border-color: var(--exito);
+}
+
+.toast-exito::before {
+    background-color: var(--exito);
+}
+
+.toast-error {
+    border-color: var(--error);
+}
+
+.toast-error::before {
+    background-color: var(--error);
+}
+
+.toast p {
+    margin: 0;
+    flex: 1;
+}
+
+.toast .toast-cerrar {
+    margin: 0;
+    padding: 0 4px;
+    background-color: transparent;
+    color: var(--texto-secundario);
+    font-size: 18px;
+    line-height: 1;
+}
+
+.toast .toast-cerrar:hover {
+    background-color: transparent;
+    color: var(--texto-principal);
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.boton-peligro:disabled:hover {
+    background-color: var(--peligro);
+}
+
+.paginador {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    margin-top: 24px;
+}
+
+.paginador button {
+    min-width: 36px;
+    padding: 6px 10px;
+    background-color: transparent;
+    color: var(--color-titulo);
+    border: 1px solid var(--color-borde);
+}
+
+.paginador button:hover {
+    background-color: var(--color-primario);
+    color: var(--texto-sobre-primario);
+    border-color: var(--color-primario);
+}
+
+.paginador button[aria-current="page"] {
+    background-color: var(--color-primario);
+    color: var(--texto-sobre-primario);
+    border-color: var(--color-primario);
+    font-weight: bold;
+}
+
+.paginador button:disabled:hover {
+    background-color: transparent;
+    color: var(--color-titulo);
+    border-color: var(--color-borde);
+}
+
+.paginador span {
+    padding: 0 4px;
+    color: var(--texto-secundario);
+}
+
+@media (max-width: 640px) {
+    .contenedor-toasts {
+        left: 16px;
+        width: auto;
+        max-width: none;
+    }
+
+    .paginador {
+        flex-wrap: wrap;
+    }
+
+    .botones-formulario {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .botones-formulario .boton-secundario {
+        margin-left: 0;
+    }
+}
+
+.boton-enlace,
+.boton-enlace-secundario {
+    text-align: center;
+}

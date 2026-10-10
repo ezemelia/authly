@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Aplicaciones | Authly</title>
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/base.css">
+        <link rel="stylesheet" href="css/components.css">
+        <link rel="stylesheet" href="css/panel.css">
+    </head>
+
+    <body>
+
+         <button type="button" aria-label="Cambiar a modo oscuro" id="cambiar-tema">
+            <svg class="icono-luna" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+                <path d="M17 4a2 2 0 0 0 2 2a2 2 0 0 0 -2 2a2 2 0 0 0 -2 -2a2 2 0 0 0 2 -2" />
+                <path d="M19 11h2m-1 -1v2" />
+            </svg>
+            <svg class="icono-sol" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M14.828 14.828a4 4 0 1 0 -5.656 -5.656a4 4 0 0 0 5.656 5.656z" />
+                <path d="M6.343 17.657l-1.414 1.414" />
+                <path d="M6.343 6.343l-1.414 -1.414" />
+                <path d="M17.657 6.343l1.414 -1.414" />
+                <path d="M17.657 17.657l1.414 1.414" />
+                <path d="M4 12h-2" />
+                <path d="M12 4v-2" />
+                <path d="M20 12h2" />
+                <path d="M12 20v2" />
+            </svg>
+        </button>
+
+        <header class="encabezado">
+
+            <a href="apps.html" class="enlace-logo" aria-label="Authly, ir a aplicaciones">
+                <img class="logo claro" src="assets/img/logo_horizontal.png" alt="">
+                <img class="logo oscuro" src="assets/img/logo_horizontal_noche.png" alt="">
+            </a>
+            
+            <div class="datos-sesion">
+                <div class="identidad">
+                    
+                    <span class="nombre-organizacion" id="nombre-organizacion"></span>
+                    <span class="email-administrador" id="email-administrador"></span>
+
+                </div>
+
+                <button type="button" class="boton-secundario" id="boton-cerrar-sesion">Cerrar sesión</button>
+
+            </div>
+
+        </header>
+
+    <main class="contenedor contenedor-ancho">
+
+        <div class="titulo-pagina">
+
+            <h1>Sus aplicaciones</h1>
+
+            <button type="button" id="boton-crear-app">Crear aplicación</button>
+
+        </div>
+
+            <p class="texto-ayuda" id="estado-carga">Cargando aplicaciones...</p>
+            <p class="resumen-lista oculto" id="resumen-apps"></p>
+
+        <table class="tabla oculto" id="tabla-apps">
+
+            <thead>
+
+                <tr>
+
+                    <th>Nombre</th>
+                    <th>Client ID</th>
+                    <th>Usuarios</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="cuerpo-tabla-apps">
+
+               
+
+            </tbody>
+
+        </table>
+
+        <section class="estado-vacio oculto" id="estado-vacio">
+
+            <p>No tiene aplicaciones aún. Cree la primera con el botón «Crear aplicación».</p>
+
+        </section>
+
+        <nav class="paginador oculto" id="paginador-apps" aria-label="Paginación de aplicaciones"></nav>
+
+    </main>
+
+    <dialog id="modal-crear-app">
+        
+        <h2>Crear aplicación</h2>
+        <form id="formulario-crear-app" novalidate>
+
+            <label for="nombre-app">Nombre</label>
+            <input type="text" id="nombre-app" name="nombre">
+            <p class="mensaje-error oculto" id="error-nombre-app">Campo incompleto. Ingrese el nombre de la aplicación.</p>
+
+            <label for="descripcion-app">Descripción (Opcional)</label>
+            <textarea id="descripcion-app" name="descripcion" rows="3"></textarea>
+
+            <div class="botones-formulario">
+
+                <button type="submit" id="boton-guardar-app">Crear</button>
+                <button type="button" class="boton-secundario" id="boton-cancelar-app">Cancelar</button>
+
+            </div> 
+
+        </form>
+
+    </dialog>
+
+    <dialog id="modal-credenciales">
+
+        <h2 id="titulo-credenciales">Aplicación creada</h2>
+       
+        <div class="aviso">
+            <svg class="icono-aviso" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 9v4" />
+                <path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z" />
+                <path d="M12 16h.01" />
+            </svg>
+            <p>Atención: el client secret no volverá a mostrarse. Asegúrese de copiarlo.</p>
+        </div>
+
+        <div class="credencial">
+            <p class="etiqueta-credencial">Client ID</p>
+            
+            <div class="credencial-fila">
+                
+                <span class="credencial-valor" id="credencial-client-id"></span>
+                <button type = "button" class="boton-secundario boton-chico" id="boton-copiar-client-id">Copiar</button>
+
+            </div>
+
+        </div>
+
+        <div class="credencial">
+            <p class="etiqueta-credencial">Client secret</p>
+            <div class="credencial-fila">
+                <span class="credencial-valor" id="credencial-secret"></span>
+                <button type = "button" class="boton-secundario boton-chico" id="boton-copiar-secret">Copiar</button>
+
+            </div>
+
+        </div>
+
+        <button type = "button" id="boton-entendido">Entendido, ya lo copié</button>
+
+    </dialog>
+
+    <script type="module" src="js/apps.js"></script>
+
+    </body>
+
+</html>
+
+    
+
+    
+
+            
+
+
+
+
+  

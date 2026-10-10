@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Iniciar sesión | Authly</title>
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/base.css">
+        <link rel="stylesheet" href="css/components.css">
+        <link rel="stylesheet" href="css/auth.css">
+    </head>
+    
+    <body>
+        <button type="button" aria-label="Cambiar a modo oscuro" id="cambiar-tema">
+            <svg class="icono-luna" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+                <path d="M17 4a2 2 0 0 0 2 2a2 2 0 0 0 -2 2a2 2 0 0 0 -2 -2a2 2 0 0 0 2 -2" />
+                <path d="M19 11h2m-1 -1v2" />
+            </svg>
+            <svg class="icono-sol" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M14.828 14.828a4 4 0 1 0 -5.656 -5.656a4 4 0 0 0 5.656 5.656z" />
+                <path d="M6.343 17.657l-1.414 1.414" />
+                <path d="M6.343 6.343l-1.414 -1.414" />
+                <path d="M17.657 6.343l1.414 -1.414" />
+                <path d="M17.657 17.657l1.414 1.414" />
+                <path d="M4 12h-2" />
+                <path d="M12 4v-2" />
+                <path d="M20 12h2" />
+                <path d="M12 20v2" />
+            </svg>
+        </button>
+
+        <div class="contenedor contenedor-angosto">
+
+            <img class="logo claro" src="assets/img/logo_horizontal.png" alt="Logo de Authly">
+            <img class="logo oscuro" src="assets/img/logo_horizontal_noche.png" alt="Logo de Authly">
+
+            <h1>Bienvenido/a a Authly</h1>
+
+            <section class="paso">
+
+                <h2>Ingrese a su cuenta</h2>
+                <form id="formulario-ingreso" novalidate>
+                    <label for="email-admin">Correo</label>
+                            <div class="campo-icono">
+                                <input type="email" id="email-admin" name="email">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M22 7.535v9.465a3 3 0 0 1 -2.824 2.995l-.176 .005h-14a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-9.465l9.445 6.297l.116 .066a1 1 0 0 0 .878 0l.116 -.066l9.445 -6.297z" />
+                                    <path d="M19 4c1.08 0 2.027 .57 2.555 1.427l-9.555 6.37l-9.555 -6.37a2.999 2.999 0 0 1 2.354 -1.42l.201 -.007h14z" />
+                                </svg>
+                            </div>   
+                            <p class="mensaje-error oculto" id="error-email"></p>
+
+                    <label for="pass-admin">Contraseña</label> 
+                            <div class="campo-icono">
+                                <input type="password" id="pass-admin" name="pass">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M12 2a5 5 0 0 1 5 5v3a3 3 0 0 1 3 3v6a3 3 0 0 1 -3 3h-10a3 3 0 0 1 -3 -3v-6a3 3 0 0 1 3 -3v-3a5 5 0 0 1 5 -5m0 12a2 2 0 0 0 -1.995 1.85l-.005 .15a2 2 0 1 0 2 -2m0 -10a3 3 0 0 0 -3 3v3h6v-3a3 3 0 0 0 -3 -3" />
+                                </svg>
+
+                                <button type="button" class="boton-ojo" id="boton-ojo-pass" aria-label="Mostrar contraseña" aria-pressed="false">
+                                    <svg class="icono-ojo-abierto" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+                                        <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
+                                    </svg>
+                                    <svg class="icono-ojo-cerrado" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M10.585 10.587a2 2 0 0 0 2.829 2.828" />
+                                        <path d="M16.681 16.673a8.717 8.717 0 0 1 -4.681 1.327c-3.6 0 -6.6 -2 -9 -6c1.272 -2.12 2.712 -3.678 4.32 -4.674m2.86 -1.146a9.055 9.055 0 0 1 1.82 -.18c3.6 0 6.6 2 9 6c-.666 1.11 -1.379 2.067 -2.138 2.87" />
+                                        <path d="M3 3l18 18" />
+                                    </svg>
+                                </button>
+
+                            </div> 
+                               
+                            <p class="mensaje-error oculto" id="error-pass">Campo incompleto. Ingrese su contraseña.</p>
+
+                    <a href="recovery.html" class="enlace-secundario">Olvidé mi contraseña</a>
+
+                    <p class="mensaje-error oculto" id="error-general"></p>
+                    
+                    <div class="botones-formulario">
+                        <button type="submit" id="boton-ingreso">Iniciar sesión</button>
+                        <a href="register.html" class="boton-enlace boton-enlace-secundario">No tengo cuenta</a>
+                    </div>  
+
+                </form>            
+
+            </section>      
+
+        </div>
+
+        <script type="module" src="js/login.js"></script>
+        
+    </body>    
+
+</html>    
+
+
+
+                    

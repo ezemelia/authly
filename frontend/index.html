@@ -1,23 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Arquitectura Multicontenedor</title>
-</head>
-<body>
-  <h1>Arquitectura Web con Docker Compose</h1>
-  <p>Frontend ejecutado mediante Nginx.</p>
-  <button onclick="consultarAPI()">
-    Consultar API
-  </button>
-  <p id="resultado"></p>
-  <script>
-    async function consultarAPI() {
-      const respuesta = await fetch('/api/');
-      const datos = await respuesta.json();
-      document.getElementById('resultado').innerText =
-        datos.mensaje;
-    }
-  </script>
-</body>
+
+    <head>
+        <meta charset="UTF-8">
+        <title>Authly</title>
+    </head>
+
+    <body>
+        <script type="module" src="js/index.js"></script>
+    </body>
+
 </html>

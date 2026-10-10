@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="es">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Aplicación | Authly</title>
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/base.css">
+        <link rel="stylesheet" href="css/components.css">
+        <link rel="stylesheet" href="css/panel.css">
+    </head>
+
+    <body>
+
+         <button type="button" aria-label="Cambiar a modo oscuro" id="cambiar-tema">
+            <svg class="icono-luna" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+                <path d="M17 4a2 2 0 0 0 2 2a2 2 0 0 0 -2 2a2 2 0 0 0 -2 -2a2 2 0 0 0 2 -2" />
+                <path d="M19 11h2m-1 -1v2" />
+            </svg>
+            <svg class="icono-sol" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M14.828 14.828a4 4 0 1 0 -5.656 -5.656a4 4 0 0 0 5.656 5.656z" />
+                <path d="M6.343 17.657l-1.414 1.414" />
+                <path d="M6.343 6.343l-1.414 -1.414" />
+                <path d="M17.657 6.343l1.414 -1.414" />
+                <path d="M17.657 17.657l1.414 1.414" />
+                <path d="M4 12h-2" />
+                <path d="M12 4v-2" />
+                <path d="M20 12h2" />
+                <path d="M12 20v2" />
+            </svg>
+        </button>
+
+            <header class="encabezado">
+
+                <a href="apps.html" class="enlace-logo" aria-label="Authly, ir a aplicaciones">
+                    <img class="logo claro" src="assets/img/logo_horizontal.png" alt="">
+                    <img class="logo oscuro" src="assets/img/logo_horizontal_noche.png" alt="">
+                </a>
+
+                <div class="datos-sesion">
+                    <div class="identidad">
+                    
+                        <span class="nombre-organizacion" id="nombre-organizacion"></span>
+                        <span class="email-administrador" id="email-administrador"></span>
+
+                    </div>
+
+                    <button type="button" class="boton-secundario" id="boton-cerrar-sesion">Cerrar sesión</button>
+
+                </div>
+
+            </header>
+
+        <main class="contenedor contenedor-ancho">
+
+            <a class="enlace-volver" href="apps.html">← Volver a aplicaciones</a>
+
+            <p class="texto-ayuda" id="estado-carga">Cargando aplicación...</p>
+
+            <section class="oculto" id="detalle-app">
+
+                <div class="titulo-pagina">
+                    <h1 id="titulo-detalle">Nombre</h1>
+                    <button type="button" class="boton-secundario" id="boton-editar">Editar</button>
+                </div>
+
+                <p class="descripcion" id="descripcion-detalle">Descripción</p>
+
+                <section>
+
+                    <h2>Credenciales</h2>
+
+                    <div class="credencial">
+
+                        <p class="etiqueta-credencial">Client ID</p>
+            
+                        <div class="credencial-fila">
+                
+                            <span class="credencial-valor" id="credencial-client-id"></span>
+                            <button type ="button" class="boton-secundario boton-chico" id="boton-copiar-client-id">Copiar</button>
+
+                        </div>
+
+                    </div>
+
+                    <div class="credencial">
+
+                        <p class="etiqueta-credencial">Client secret</p>
+
+                        <div class="aviso">
+                            <svg class="icono-aviso" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M12 9v4" />
+                                <path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z" />
+                                <path d="M12 16h.01" />
+                            </svg>
+
+                            <p>El client secret no puede volver a mostrarse. Si lo perdió, genere uno nuevo: el actual dejará de funcionar y los sistemas que lo usen tendrán que actualizarlo.</p>
+
+                        </div>
+
+                        <button type="button" class="boton-peligro-borde" id="boton-regenerar">Regenerar secret</button>
+
+                    </div>
+
+                </section>
+
+                <section class="pestanas-app">
+
+                    <div class="pestanas" role="tablist" aria-label="Gestión de la aplicación">
+                        <button type="button" role="tab" class="pestana" id="pestana-roles" aria-selected="true" aria-controls="panel-roles">Roles</button>
+                        <button type="button" role="tab" class="pestana" id="pestana-usuarios" aria-selected="false" aria-controls="panel-usuarios">Usuarios</button>
+                    </div>
+
+                    <div role="tabpanel" id="panel-roles" aria-labelledby="pestana-roles">
+                        <div class="barra-panel">
+                            <p class="texto-ayuda">Los roles definen qué puede hacer cada usuario de la aplicación.</p>
+                            <button type="button" id="boton-crear-rol">Crear rol</button>
+                        </div>
+
+                        <p class="texto-ayuda" id="estado-carga-roles">Cargando roles...</p>
+
+                        <table class="tabla oculto" id="tabla-roles">
+
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Permisos</th>
+                                    <th>Usuarios</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="cuerpo-tabla-roles">
+                               
+                            </tbody>
+
+                        </table>
+
+                        <section class="estado-vacio oculto" id="estado-vacio-roles">
+                            <p>Esta aplicación no tiene roles aún. Cree el primero con el botón «Crear rol».</p>
+                        </section>
+                    </div>
+
+                    <div role="tabpanel" class="oculto" id="panel-usuarios" aria-labelledby="pestana-usuarios">
+
+                        <p class="texto-ayuda">Los usuarios se registran desde el sistema externo de la aplicación. Desde aquí se puede cambiar su nombre y sus roles, o eliminarlos.</p>
+
+                        <p class="texto-ayuda" id="estado-carga-usuarios">Cargando usuarios...</p>
+
+                        <table class="tabla oculto" id="tabla-usuarios">
+
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Roles</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="cuerpo-tabla-usuarios">
+
+                            </tbody>
+
+                        </table>
+
+                        <section class="estado-vacio oculto" id="estado-vacio-usuarios">
+                            <p>Esta aplicación no tiene usuarios aún. Los usuarios se registran desde el sistema externo de la aplicación.</p>
+                        </section>
+
+                        <nav class="paginador oculto" id="paginador-usuarios" aria-label="Paginación de usuarios"></nav>
+
+                    </div>
+
+                </section>
+
+                <section class="zona-peligro">
+                    <h2>Acciones irreversibles</h2>
+                    <p class="texto-ayuda">Eliminar la aplicación no se puede deshacer. Solo es posible si no tiene usuarios.</p>
+                    <button type="button" class="boton-peligro-borde" id="boton-eliminar-app">Eliminar aplicación</button>
+                </section>
+
+            </section>
+
+            <section class="oculto" id="no-encontrada">
+
+                <p>No se encontró la aplicación.</p>
+                <a class="enlace-volver" href="apps.html">← Volver a aplicaciones</a>
+                    
+            </section>
+
+        </main>
+
+        <dialog id="modal-confirmar-regenerar">
+
+            <h2>Regenerar client secret</h2>
+
+            <div class="aviso">
+                <svg class="icono-aviso" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 9v4" />
+                    <path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z" />
+                    <path d="M12 16h.01" />
+                </svg>
+                <p>El client secret actual dejará de funcionar. Los sistemas que lo usen no podrán autenticarse hasta que se los configure con el nuevo.</p>
+            </div>
+
+            <p id="texto-confirmar-regenerar"></p>
+            <p class="mensaje-error oculto" id="error-regenerar">No se pudo regenerar el client secret. Intente nuevamente.</p>
+
+            <div class="botones-formulario">
+                <button type="button" class="boton-peligro" id="boton-confirmar-regenerar">Regenerar</button>
+                <button type="button" class="boton-secundario" id="boton-cancelar-regenerar">Cancelar</button>
+            </div>
+
+        </dialog>
+
+        <dialog id="modal-secret">
+
+            <h2>Nuevo client secret</h2>
+
+            <div class="aviso">
+                <svg class="icono-aviso" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 9v4" />
+                    <path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z" />
+                    <path d="M12 16h.01" />
+                </svg>
+                <p>Atención: el client secret no volverá a mostrarse. Asegúrese de copiarlo.</p>
+            </div>
+
+            <div class="credencial">
+                <p class="etiqueta-credencial">Client secret</p>
+                <div class="credencial-fila">
+                    <span class="credencial-valor" id="valor-secret-nuevo"></span>
+                    <button type="button" class="boton-secundario boton-chico" id="boton-copiar-secret">Copiar</button>
+                </div>
+            </div>
+
+            <button type="button" id="boton-entendido">Entendido, ya lo copié</button>
+
+        </dialog>
+
+        <dialog id="modal-editar-app">
+
+            <h2>Editar aplicación</h2>
+
+            <form id="formulario-editar-app" novalidate>
+
+                <label for="nombre-editar">Nombre</label>
+                <input type="text" id="nombre-editar" name="nombre">
+                <p class="mensaje-error oculto" id="error-nombre-editar">Campo incompleto. Ingrese el nombre de la aplicación.</p>
+
+                <label for="descripcion-editar">Descripción (opcional)</label>
+                <textarea id="descripcion-editar" name="descripcion" rows="3"></textarea>
+
+                <div class="botones-formulario">
+                    <button type="submit" id="boton-guardar-editar">Guardar</button>
+                    <button type="button" class="boton-secundario" id="boton-cancelar-editar">Cancelar</button>
+                </div>
+
+            </form>
+
+        </dialog>
+
+        <dialog id="modal-rol" class="dialog-ancho">
+
+            <h2 id="titulo-modal-rol">Crear rol</h2>
+
+            <form id="formulario-rol" novalidate>
+
+                <label for="nombre-rol">Nombre</label>
+                <input type="text" id="nombre-rol" name="nombre">
+                <p class="mensaje-error oculto" id="error-nombre-rol">Campo incompleto. Ingrese el nombre del rol.</p>
+
+                <label for="descripcion-rol">Descripción (opcional)</label>
+                <textarea id="descripcion-rol" name="descripcion" rows="2"></textarea>
+
+                <fieldset class="grupo-campos">
+                    <legend>Permisos</legend>
+                    <p class="texto-ayuda">Cada permiso combina un recurso y una acción, por ejemplo «facturas» y «leer». Un rol puede no tener permisos.</p>
+                    <div id="lista-permisos"></div>
+                    <p class="mensaje-error oculto" id="error-permisos"></p>
+                    <button type="button" class="boton-secundario boton-chico" id="boton-agregar-permiso">Agregar permiso</button>
+                </fieldset>
+
+                <div class="casilla-fila">
+                    <input type="checkbox" id="rol-por-defecto" name="porDefecto">
+                    <label for="rol-por-defecto">Rol por defecto</label>
+                </div>
+                <p class="texto-ayuda">Los usuarios nuevos reciben este rol. Solo uno por aplicación.</p>
+
+                <p class="mensaje-error oculto" id="error-general-rol"></p>
+
+                <div class="botones-formulario">
+                    <button type="submit" id="boton-guardar-rol">Crear</button>
+                    <button type="button" class="boton-secundario" id="boton-cancelar-rol">Cancelar</button>
+                </div>
+
+                <datalist id="acciones-sugeridas">
+                    <option value="crear"></option>
+                    <option value="leer"></option>
+                    <option value="editar"></option>
+                    <option value="eliminar"></option>
+                </datalist>
+
+            </form>
+
+        </dialog>
+
+        <dialog id="modal-confirmar-sin-defecto">
+
+            <h2>Quitar el rol por defecto</h2>
+
+            <div class="aviso">
+                <svg class="icono-aviso" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 9v4" />
+                    <path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z" />
+                    <path d="M12 16h.01" />
+                </svg>
+                <p>Este rol deja de ser el rol por defecto. Mientras la aplicación no tenga otro, no se podrán registrar usuarios nuevos.</p>
+            </div>
+
+            <p id="texto-confirmar-sin-defecto"></p>
+
+            <div class="botones-formulario">
+                <button type="button" id="boton-confirmar-sin-defecto">Guardar cambios</button>
+                <button type="button" class="boton-secundario" id="boton-volver-formulario">Volver al formulario</button>
+            </div>
+
+        </dialog>
+
+        <dialog id="modal-eliminar-rol">
+
+            <h2 id="titulo-eliminar-rol">Eliminar rol</h2>
+
+            <div class="aviso">
+                <svg class="icono-aviso" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 9v4" />
+                    <path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z" />
+                    <path d="M12 16h.01" />
+                </svg>
+                <p id="aviso-eliminar-rol"></p>
+            </div>
+
+            <p class="mensaje-error oculto" id="error-eliminar-rol"></p>
+
+            <div class="botones-formulario">
+                <button type="button" class="boton-peligro" id="boton-confirmar-eliminar">Eliminar</button>
+                <button type="button" class="boton-secundario" id="boton-cancelar-eliminar">Cancelar</button>
+            </div>
+
+        </dialog>
+
+        <dialog id="modal-eliminar-app">
+
+            <h2 id="titulo-eliminar-app">Eliminar aplicación</h2>
+
+            <div class="aviso">
+                <svg class="icono-aviso" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 9v4" />
+                    <path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z" />
+                    <path d="M12 16h.01" />
+                </svg>
+                <p id="aviso-eliminar-app"></p>
+            </div>
+
+            <div id="confirmacion-nombre-app">
+                <label for="campo-nombre-eliminar">Para confirmar, escriba el nombre de la aplicación</label>
+                <input type="text" id="campo-nombre-eliminar" autocomplete="off">
+                <p class="texto-ayuda" id="ayuda-nombre-eliminar"></p>
+            </div>
+
+            <p class="mensaje-error oculto" id="error-eliminar-app"></p>
+
+            <div class="botones-formulario">
+                <button type="button" class="boton-peligro" id="boton-confirmar-eliminar-app">Eliminar aplicación</button>
+                <button type="button" class="boton-secundario" id="boton-cancelar-eliminar-app">Cancelar</button>
+            </div>
+
+        </dialog>
+
+        <dialog id="modal-editar-usuario" class="dialog-ancho">
+
+            <h2>Editar usuario</h2>
+
+            <form id="formulario-editar-usuario" novalidate>
+
+                <p class="etiqueta-credencial">Email</p>
+                <p class="dato-fijo" id="email-editar-usuario"></p>
+                <p class="texto-ayuda">El email no se puede modificar.</p>
+
+                <label for="nombre-usuario">Nombre</label>
+                <input type="text" id="nombre-usuario" name="nombre">
+                <p class="mensaje-error oculto" id="error-nombre-usuario">Campo incompleto. Ingrese el nombre.</p>
+
+                <label for="apellido-usuario">Apellido</label>
+                <input type="text" id="apellido-usuario" name="apellido">
+                <p class="mensaje-error oculto" id="error-apellido-usuario">Campo incompleto. Ingrese el apellido.</p>
+
+                <fieldset class="grupo-campos">
+                    <legend>Roles</legend>
+                    <p class="texto-ayuda">El usuario debe tener al menos un rol. Sus permisos son la suma de los permisos de todos sus roles.</p>
+                    <div id="lista-roles-usuario"></div>
+                    <p class="mensaje-error oculto" id="error-roles-usuario">El usuario debe tener al menos un rol.</p>
+                </fieldset>
+
+                <p class="mensaje-error oculto" id="error-general-usuario"></p>
+
+                <div class="botones-formulario">
+                    <button type="submit" id="boton-guardar-usuario">Guardar</button>
+                    <button type="button" class="boton-secundario" id="boton-cancelar-usuario">Cancelar</button>
+                </div>
+
+            </form>
+
+        </dialog>
+
+        <dialog id="modal-eliminar-usuario">
+
+            <h2>Eliminar usuario</h2>
+
+            <div class="aviso">
+                <svg class="icono-aviso" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 9v4" />
+                    <path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z" />
+                    <path d="M12 16h.01" />
+                </svg>
+                <p>Se eliminará este usuario de la aplicación. Esta acción no se puede deshacer: si quiere volver, deberá registrarse y verificar su email de nuevo.</p>
+            </div>
+
+            <dl class="ficha-usuario">
+                <dt>Nombre</dt>
+                <dd id="nombre-eliminar-usuario"></dd>
+                <dt>Email</dt>
+                <dd id="email-eliminar-usuario"></dd>
+                <dt>Roles</dt>
+                <dd id="roles-eliminar-usuario"></dd>
+            </dl>
+
+            <p class="mensaje-error oculto" id="error-eliminar-usuario"></p>
+
+            <div class="botones-formulario">
+                <button type="button" class="boton-peligro" id="boton-confirmar-eliminar-usuario">Eliminar usuario</button>
+                <button type="button" class="boton-secundario" id="boton-cancelar-eliminar-usuario">Cancelar</button>
+            </div>
+
+        </dialog>
+
+        <script type="module" src="js/app.js"></script>
+
+    </body>
+
+</html>
+
