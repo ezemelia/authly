@@ -8,9 +8,12 @@ from app.services.users import (
     registrar_usuario, autenticar_usuario, buscar_por_id, EmailYaRegistrado, CredencialesInvalidas,
 )
 
+from app.routers.applications import router as applications_router
+
 app = FastAPI(title="Authly")
 esquema_bearer = HTTPBearer()  # exige el header "Authorization: Bearer <token>" y habilita el botón Authorize en /docs
 
+app.include_router(applications_router)
 
 # Datos que esperamos recibir en el body del request
 class RegistroEntrada(BaseModel):
