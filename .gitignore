@@ -6,6 +6,9 @@
 !.env.example
 private_key.pem
 
+*.pem
+*.key
+
 # ==========================
 # Python (backend)
 # ==========================
