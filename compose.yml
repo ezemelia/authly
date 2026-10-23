@@ -1,5 +1,6 @@
 services:
   db:
+    profiles: [local-db]
     image: postgres:17-alpine
     ports:
       - "5432:5432"
@@ -21,18 +22,16 @@ services:
     build:
       context: ./backend
     environment:
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_NAME: ${POSTGRES_DB}
-      DB_USER: ${POSTGRES_USER}
-      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-postgres}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_SSLMODE: ${DB_SSLMODE:-require}
       JWT_PRIVATE_KEY_PATH: ${JWT_PRIVATE_KEY_PATH:-keys/private_key.pem}
       JWT_PUBLIC_KEY_PATH: ${JWT_PUBLIC_KEY_PATH:-keys/public_key.pem}
     volumes:
       - ./backend/keys:/app/keys:ro  
-    depends_on:
-      db:
-        condition: service_healthy
 
   frontend:
     image: nginx:latest

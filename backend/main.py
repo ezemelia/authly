@@ -1,35 +1,54 @@
-import jwt
 from fastapi import Depends, FastAPI, HTTPException
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr
 
-from app.services.auth import crear_token, leer_token
+from app.dependencies import usuario_actual
+from app.services.auth import crear_token
+from app.services.registro import pedir_codigo, confirmar_codigo, RegistroInvalido
 from app.services.users import (
-    registrar_usuario, autenticar_usuario, buscar_por_id, EmailYaRegistrado, CredencialesInvalidas,
+    autenticar_usuario, CredencialesInvalidas,
 )
 
 from app.routers.applications import router as applications_router
 
 app = FastAPI(title="Authly")
-esquema_bearer = HTTPBearer()  # exige el header "Authorization: Bearer <token>" y habilita el botón Authorize en /docs
 
 app.include_router(applications_router)
 
-# Datos que esperamos recibir en el body del request
 class RegistroEntrada(BaseModel):
-    username: str
+    nombre: str
+    apellido: str
     email: EmailStr  # FastAPI rechaza con 422 si no tiene formato de email
     password: str
+    organizacion: str
+    cuit: str
 
 
-@app.post("/register", status_code=201)
-def register(datos: RegistroEntrada):
+class ConfirmacionEntrada(RegistroEntrada):
+    codigo: str
+
+
+def _error_registro(e: RegistroInvalido) -> JSONResponse:
+    return JSONResponse(
+        status_code=400, content={"detail": str(e), "campo": e.campo, "reinicio": e.reinicio}
+    )
+
+
+@app.post("/register/codigo")
+def register_codigo(datos: RegistroEntrada):
     try:
-        return registrar_usuario(datos.username, datos.email, datos.password)
-    except EmailYaRegistrado as e:
-        raise HTTPException(status_code=409, detail=str(e))  # conflicto
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))  # password inválida
+        pedir_codigo(**datos.model_dump())
+    except RegistroInvalido as e:
+        return _error_registro(e)
+    return {"detail": "Código enviado"}
+
+
+@app.post("/register/confirmar", status_code=201)
+def register_confirmar(datos: ConfirmacionEntrada):
+    try:
+        return confirmar_codigo(**datos.model_dump())
+    except RegistroInvalido as e:
+        return _error_registro(e)
 
 
 class LoginEntrada(BaseModel):
@@ -44,18 +63,6 @@ def login(datos: LoginEntrada):
     except CredencialesInvalidas as e:
         raise HTTPException(status_code=401, detail=str(e))
     return {"access_token": crear_token(usuario), "token_type": "bearer"}
-
-
-def usuario_actual(credenciales: HTTPAuthorizationCredentials = Depends(esquema_bearer)):
-    # "guardia" que se ejecuta antes de la ruta: valida el token y busca al usuario
-    try:
-        id_usuario = leer_token(credenciales.credentials)
-    except jwt.InvalidTokenError:  # token falso, alterado o vencido
-        raise HTTPException(status_code=401, detail="Token inválido o vencido")
-    usuario = buscar_por_id(id_usuario)
-    if usuario is None:
-        raise HTTPException(status_code=401, detail="Usuario no encontrado")
-    return usuario
 
 
 @app.get("/me")

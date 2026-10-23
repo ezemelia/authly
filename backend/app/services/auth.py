@@ -15,8 +15,8 @@ def crear_token(usuario: dict) -> str:
     return jwt.encode(payload, config.JWT_PRIVATE_KEY, algorithm=config.JWT_ALGORITMO)
 
 
-def leer_token(token: str) -> int:
-    """Devuelve el id del usuario del token; lanza jwt.InvalidTokenError si es falso o venció."""
+def leer_token(token: str) -> str:
+    """Devuelve el id (uuid) del usuario del token; lanza jwt.InvalidTokenError si es falso o venció."""
     # se verifica con la clave PÚBLICA; decode revisa la firma y el vencimiento ("exp")
     payload = jwt.decode(token, config.JWT_PUBLIC_KEY, algorithms=[config.JWT_ALGORITMO])
-    return int(payload["sub"])
+    return payload["sub"]
