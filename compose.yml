@@ -28,11 +28,18 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       JWT_PRIVATE_KEY_PATH: ${JWT_PRIVATE_KEY_PATH:-keys/private_key.pem}
       JWT_PUBLIC_KEY_PATH: ${JWT_PUBLIC_KEY_PATH:-keys/public_key.pem}
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
     volumes:
-      - ./backend/keys:/app/keys:ro  
+      - ./backend/keys:/app/keys:ro
     depends_on:
       db:
         condition: service_healthy
+
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - "8025:8025"
 
   frontend:
     image: nginx:latest
