@@ -7,7 +7,8 @@ from app import config
 from app.services.auth import crear_token, leer_token
 
 # Estos tests no usan la base de datos ni el servidor: prueban solo la generación del token.
-USUARIO = {"id": 42, "username": "ana", "email": "ana@mail.com"}
+ID = "d681b122-fb20-434f-9dd6-734bf0fd79f1"  # los ids son uuid
+USUARIO = {"id": ID, "nombre": "Ana", "email": "ana@mail.com"}
 
 
 def test_crear_token_devuelve_un_texto_con_tres_partes():
@@ -29,11 +30,11 @@ def test_el_token_guarda_el_id_del_usuario():
     token = crear_token(USUARIO)
 
     payload = jwt.decode(token, config.JWT_PUBLIC_KEY, algorithms=["RS256"])
-    assert payload["sub"] == "42"
+    assert payload["sub"] == ID
 
 
 def test_el_token_no_contiene_datos_sensibles():
-    token = crear_token({**USUARIO, "password_hash": "$2b$12$secreto"})
+    token = crear_token({**USUARIO, "password_hash": "$argon2id$secreto"})
 
     payload = jwt.decode(token, config.JWT_PUBLIC_KEY, algorithms=["RS256"])
     assert set(payload) == {"sub", "exp"}  # solo id y vencimiento
@@ -53,7 +54,7 @@ def test_el_token_vence_en_el_tiempo_configurado():
 def test_leer_token_devuelve_el_id_del_usuario():
     token = crear_token(USUARIO)
 
-    assert leer_token(token) == 42
+    assert leer_token(token) == ID
 
 
 def test_leer_token_rechaza_un_token_alterado():
@@ -67,4 +68,4 @@ def test_leer_token_rechaza_un_token_alterado():
 
 def test_dos_tokens_del_mismo_usuario_se_pueden_leer_ambos():
     # cada login genera un token nuevo, pero los dos identifican al mismo usuario
-    assert leer_token(crear_token(USUARIO)) == leer_token(crear_token(USUARIO)) == 42
+    assert leer_token(crear_token(USUARIO)) == leer_token(crear_token(USUARIO)) == ID

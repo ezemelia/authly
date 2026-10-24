@@ -13,7 +13,10 @@ def obtener_conexion():
             dbname=os.environ.get("DB_NAME"),           # el nombre de la base de datos
             user=os.environ.get("DB_USER"),             # el usuario de PostgreSQL
             password=os.environ.get("DB_PASSWORD"),     # la contraseña de ese usuario
+            sslmode=os.environ.get("DB_SSLMODE", "prefer"),  # Supabase exige "require"
         )
+        conexion.execute("SET search_path TO authly")  # tablas de Authly, separadas de public
+        conexion.commit()
         return conexion
     except psycopg.OperationalError as e:
         print(f"Error al conectar a la base de datos: {e}")

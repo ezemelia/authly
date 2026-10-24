@@ -1,6 +1,5 @@
-import uuid
-import bcrypt
-import psycopg
+import hashlib
+import secrets
 
 from app.database import obtener_conexion
 
@@ -16,77 +15,68 @@ def _conectar():
     return conexion
 
 
-def crear_aplicacion(nombre: str, descripcion: str, org_id: int) -> dict:
-    client_id = str(uuid.uuid4())
-    client_secret = str(uuid.uuid4())
-    secret_hash = bcrypt.hashpw(client_secret.encode(), bcrypt.gensalt()).decode()
+def _hash_secret(client_secret: str) -> str:
+    # el secret es aleatorio y largo, así que alcanza con SHA-256 (es el formato que usa la base)
+    return hashlib.sha256(client_secret.encode()).hexdigest()
 
-    try:
-        with _conectar() as conn:
-            fila = conn.execute(
-                """
-                INSERT INTO applications (org_id, name, description, client_id, client_secret_hash)
-                VALUES (%s, %s, %s, %s, %s)
-                RETURNING id
-                """,
-                (org_id, nombre, descripcion, client_id, secret_hash),
-            ).fetchone()
-    except psycopg.errors.UniqueViolation:
-        raise NombreAppDuplicado(f"Ya existe una aplicación con el nombre '{nombre}'")
 
-    return {
-        "id": fila[0],
-        "nombre": nombre,
-        "client_id": client_id,
-        "client_secret": client_secret,
-    }
+def crear_aplicacion(nombre: str, descripcion: str, organizacion_id) -> dict:
+    nombre = nombre.strip()
+    descripcion = (descripcion or "").strip()
+    client_secret = secrets.token_urlsafe(32)
 
-def listar_aplicaciones(org_id: int) -> list:
+    with _conectar() as conn:
+        existe = conn.execute(
+            "SELECT 1 FROM aplicacion WHERE organizacion_id = %s AND lower(nombre) = lower(%s)",
+            (organizacion_id, nombre),
+        ).fetchone()
+        if existe:
+            raise NombreAppDuplicado(f"Ya existe una aplicación con el nombre '{nombre}'")
+        fila = conn.execute(
+            """
+            INSERT INTO aplicacion (organizacion_id, nombre, descripcion, hash_secret)
+            VALUES (%s, %s, %s, %s)
+            RETURNING client_id
+            """,
+            (organizacion_id, nombre, descripcion, _hash_secret(client_secret)),
+        ).fetchone()
+
+    return {"nombre": nombre, "client_id": str(fila[0]), "client_secret": client_secret}
+
+
+def listar_aplicaciones(organizacion_id) -> list:
     with _conectar() as conn:
         filas = conn.execute(
             """
-            SELECT id, name, description, client_id, created_at
-            FROM applications
-            WHERE org_id = %s
-            ORDER BY created_at DESC
+            SELECT client_id, nombre, descripcion, creado_en
+            FROM aplicacion
+            WHERE organizacion_id = %s
+            ORDER BY creado_en DESC
             """,
-            (org_id,),
+            (organizacion_id,),
         ).fetchall()
 
     return [
-        {
-            "id": f[0],
-            "name": f[1],
-            "description": f[2],
-            "client_id": f[3],
-            "created_at": str(f[4]),
-        }
+        {"client_id": str(f[0]), "nombre": f[1], "descripcion": f[2], "creado_en": f[3].isoformat()}
         for f in filas
     ]
 
-def regenerar_secret(app_id: int) -> dict:
-    client_secret = str(uuid.uuid4())
-    secret_hash = bcrypt.hashpw(client_secret.encode(), bcrypt.gensalt()).decode()
 
-    try:
-            with _conectar() as conn:
-                fila = conn.execute(
-                    """
-                    UPDATE applications
-                    SET client_secret_hash = %s
-                    WHERE id = %s
-                    RETURNING id, client_id
-                    """,
-                    (secret_hash, app_id),
-                ).fetchone()
-    except Exception as e:
-        raise RuntimeError(f"Error al regenerar secret: {e}")
+def regenerar_secret(client_id, organizacion_id) -> dict:
+    client_secret = secrets.token_urlsafe(32)
+
+    with _conectar() as conn:
+        fila = conn.execute(
+            """
+            UPDATE aplicacion
+            SET hash_secret = %s
+            WHERE client_id = %s AND organizacion_id = %s
+            RETURNING client_id
+            """,
+            (_hash_secret(client_secret), client_id, organizacion_id),
+        ).fetchone()
 
     if fila is None:
         raise ValueError("Aplicación no encontrada")
 
-    return {
-        "id": fila[0],
-        "client_id": fila[1],
-        "client_secret": client_secret,
-    }
+    return {"client_id": str(fila[0]), "client_secret": client_secret}
