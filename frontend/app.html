@@ -248,11 +248,11 @@
             <form id="formulario-editar-app" novalidate>
 
                 <label for="nombre-editar">Nombre</label>
-                <input type="text" id="nombre-editar" name="nombre">
+                <input type="text" id="nombre-editar" maxlength="100" name="nombre">
                 <p class="mensaje-error oculto" id="error-nombre-editar">Campo incompleto. Ingrese el nombre de la aplicación.</p>
 
                 <label for="descripcion-editar">Descripción (opcional)</label>
-                <textarea id="descripcion-editar" name="descripcion" rows="3"></textarea>
+                <textarea id="descripcion-editar" maxlength="500" name="descripcion" rows="3"></textarea>
 
                 <div class="botones-formulario">
                     <button type="submit" id="boton-guardar-editar">Guardar</button>
@@ -270,11 +270,11 @@
             <form id="formulario-rol" novalidate>
 
                 <label for="nombre-rol">Nombre</label>
-                <input type="text" id="nombre-rol" name="nombre">
+                <input type="text" id="nombre-rol" maxlength="100" name="nombre">
                 <p class="mensaje-error oculto" id="error-nombre-rol">Campo incompleto. Ingrese el nombre del rol.</p>
 
                 <label for="descripcion-rol">Descripción (opcional)</label>
-                <textarea id="descripcion-rol" name="descripcion" rows="2"></textarea>
+                <textarea id="descripcion-rol" maxlength="500" name="descripcion" rows="2"></textarea>
 
                 <fieldset class="grupo-campos">
                     <legend>Permisos</legend>
@@ -391,11 +391,11 @@
                 <p class="texto-ayuda">El email no se puede modificar.</p>
 
                 <label for="nombre-usuario">Nombre</label>
-                <input type="text" id="nombre-usuario" name="nombre">
+                <input type="text" id="nombre-usuario" maxlength="100" name="nombre">
                 <p class="mensaje-error oculto" id="error-nombre-usuario">Campo incompleto. Ingrese el nombre.</p>
 
                 <label for="apellido-usuario">Apellido</label>
-                <input type="text" id="apellido-usuario" name="apellido">
+                <input type="text" id="apellido-usuario" maxlength="100" name="apellido">
                 <p class="mensaje-error oculto" id="error-apellido-usuario">Campo incompleto. Ingrese el apellido.</p>
 
                 <fieldset class="grupo-campos">
