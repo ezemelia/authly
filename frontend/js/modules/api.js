@@ -161,14 +161,14 @@ async function esperarConSesion() {
 
 export async function pedirCodigo(datos) {
     await esperar(1000);
-    if (datos.email.trim().toLowerCase() === "valentinocastellano@hotmail.com") {
+    if (datos.email.trim().toLowerCase() === "registrado@example.com") {
         return {exito: false, campo: "email", mensaje: "Ese email ya está registrado."};
     }
     
     if (datos.cuit.trim() === "11111111111") {
         return {exito: false, campo: "cuit", mensaje: "Este CUIT ya está registrado."};
     }
-    if (datos.email.trim().toLowerCase() === "tamaragamboa@hotmail.com") {
+    if (datos.email.trim().toLowerCase() === "error-envio@example.com") {
         return {exito: false, campo: "general", mensaje: "No se pudo enviar el correo."};
     }
     codigosEmitidos += 1;
@@ -185,7 +185,7 @@ export async function confirmarCodigo(datos) {
         return {exito: false, campo: "codigo", mensaje: "El código expiró. Genere un nuevo código."};
     }
 
-    if (datos.email === "ringo@hotmail.com") {
+    if (datos.email === "no-disponible@example.com") {
         intentos = 0;
         return {exito: false, reinicio: true, campo: "email", mensaje: "El correo ingresado ya no está disponible."};
     }
@@ -229,7 +229,7 @@ export async function cambiarPassword(datos) {
         return {exito: false, campo: "codigo"};
     }
     
-    if (datos.password === "Abc123456-") {
+    if (datos.password === "Ejemplo123-") {
         return {exito: false, campo: "pass"};
     }
     intentosRecuperacion = 0;
@@ -238,7 +238,7 @@ export async function cambiarPassword(datos) {
 
 export async function iniciarSesion(datos) {
     await esperar(1000);
-    if (datos.email.trim().toLowerCase() === "dalmirocastellano@gmail.com" && datos.password === "Abc123456-") {
+    if (datos.email.trim().toLowerCase() === "admin@example.com" && datos.password === "Ejemplo123-") {
         return {exito: true, token: "token-de-prueba", email: datos.email.trim().toLowerCase(), organizacion: "Authly inc."};
     }
     return {exito: false};
@@ -353,6 +353,9 @@ export async function listarRoles(clientId) {
 
     const rolesDeLaApp = roles.filter(function (rol) {
         return rol.clientId === clientId;
+    });
+    rolesDeLaApp.sort(function (a, b) {
+        return a.nombre.localeCompare(b.nombre, "es");
     });
     return {exito: true, roles: rolesDeLaApp};
 }

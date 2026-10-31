@@ -104,11 +104,11 @@
         <form id="formulario-crear-app" novalidate>
 
             <label for="nombre-app">Nombre</label>
-            <input type="text" id="nombre-app" name="nombre">
+            <input type="text" id="nombre-app" maxlength="100" name="nombre">
             <p class="mensaje-error oculto" id="error-nombre-app">Campo incompleto. Ingrese el nombre de la aplicación.</p>
 
-            <label for="descripcion-app">Descripción (Opcional)</label>
-            <textarea id="descripcion-app" name="descripcion" rows="3"></textarea>
+            <label for="descripcion-app">Descripción (opcional)</label>
+            <textarea id="descripcion-app" maxlength="500" name="descripcion" rows="3"></textarea>
 
             <div class="botones-formulario">
 

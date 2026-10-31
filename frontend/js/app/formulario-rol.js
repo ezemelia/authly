@@ -31,12 +31,14 @@ function crearFilaPermiso(permiso) {
     recurso.placeholder = "Recurso (por ejemplo, facturas)";
     recurso.setAttribute("aria-label", "Recurso del permiso");
     recurso.classList.add("campo-recurso");
+    recurso.maxLength = 100; 
 
     const accion = document.createElement("input");
     accion.type = "text";
     accion.placeholder = "Acción (por ejemplo, leer)";
     accion.setAttribute("aria-label", "Acción del permiso");
     accion.classList.add("campo-accion");
+    accion.maxLength = 100; 
     accion.setAttribute("list", "acciones-sugeridas");
 
     if (permiso !== undefined) {
