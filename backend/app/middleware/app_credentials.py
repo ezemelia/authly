@@ -1,6 +1,6 @@
 import hashlib
 from fastapi import Depends, HTTPException, Header
-from app.database import get_connection
+from app.database import obtener_conexion
 
 
 def _hash_secreto(secreto: str) -> str:
@@ -15,7 +15,7 @@ def aplicacion_actual(
     """Dependency que valida las credenciales de una aplicación externa.
     Usada por los endpoints de la API pública (CU-05, 07, 09, 11).
     """
-    conn = get_connection()
+    conn = obtener_conexion()
     try:
         with conn.cursor() as cur:
             cur.execute(
