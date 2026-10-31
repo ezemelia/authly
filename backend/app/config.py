@@ -13,7 +13,7 @@ def _leer_clave(variable: str) -> str:
     return (BACKEND_DIR / os.environ[variable]).read_text()
 
 
-JWT_ALGORITMO = "RS256"  # firma asimétrica: privada firma, pública verifica
+JWT_ALGORITMO = "RS256"     # firma asimétrica: clave privada firma, clave pública verifica
 JWT_PRIVATE_KEY = _leer_clave("JWT_PRIVATE_KEY_PATH")
 JWT_PUBLIC_KEY = _leer_clave("JWT_PUBLIC_KEY_PATH")
-JWT_EXPIRA_MINUTOS = 60
+JWT_EXPIRA_MINUTOS = 480    # 8 horas — AURN-06

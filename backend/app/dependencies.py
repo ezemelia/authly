@@ -9,12 +9,19 @@ esquema_bearer = HTTPBearer()  # exige el header "Authorization: Bearer <token>"
 
 
 def usuario_actual(credenciales: HTTPAuthorizationCredentials = Depends(esquema_bearer)):
-    # "guardia" que se ejecuta antes de la ruta: valida el token y busca al administrador
+    """Dependency que valida el JWT y devuelve los datos del administrador.
+
+    Rechaza tokens que no sean de tipo 'admin'.
+    """
     try:
-        id_usuario = leer_token(credenciales.credentials)
-    except jwt.InvalidTokenError:  # token falso, alterado o vencido
+        payload = leer_token(credenciales.credentials)
+    except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Token inválido o vencido")
-    usuario = buscar_por_id(id_usuario)
+
+    if payload.get("type") != "admin":
+        raise HTTPException(status_code=403, detail="Token no autorizado para esta operación")
+
+    usuario = buscar_por_id(payload["sub"])
     if usuario is None:
         raise HTTPException(status_code=401, detail="Usuario no encontrado")
     return usuario

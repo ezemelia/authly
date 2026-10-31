@@ -58,3 +58,32 @@ def buscar_por_id(id_usuario: str):
     if fila is None:
         return None
     return {"id": fila[0], "nombre": fila[1], "apellido": fila[2], "email": fila[3], "organizacion_id": fila[4]}
+
+
+# ── Usuarios de aplicación (tabla: usuario) ──────────────────────
+
+
+def autenticar_usuario_app(email: str, password: str, aplicacion_id: str) -> dict:
+    """Autentica un usuario de una aplicación específica (CU-07).
+    Busca por email DENTRO de esa aplicación, no global.
+    """
+    with _conectar() as conn:
+        fila = conn.execute(
+            """
+            SELECT id, nombre, apellido, email, hash_contrasena, aplicacion_id
+            FROM usuario
+            WHERE email = %s AND aplicacion_id = %s
+            """,
+            (normalizar_email(email), aplicacion_id),
+        ).fetchone()
+
+    if fila is None or not _password_correcta(password, fila[4]):
+        raise CredencialesInvalidas("Email o contraseña incorrectos")
+
+    return {
+        "id": str(fila[0]),
+        "nombre": fila[1],
+        "apellido": fila[2],
+        "email": fila[3],
+        "aplicacion_id": str(fila[5]),
+    }

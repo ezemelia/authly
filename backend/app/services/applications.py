@@ -80,3 +80,44 @@ def regenerar_secret(client_id, organizacion_id) -> dict:
         raise ValueError("Aplicación no encontrada")
 
     return {"client_id": str(fila[0]), "client_secret": client_secret}
+
+def editar_aplicacion(client_id, nombre: str, descripcion: str, organizacion_id) -> dict:
+    nombre = nombre.strip()
+    descripcion = (descripcion or "").strip()
+    if not nombre:
+        raise ValueError("El nombre es obligatorio")
+
+    with _conectar() as conn:
+        # verificar que no exista otra app con ese nombre en la misma org
+        duplicada = conn.execute(
+            "SELECT 1 FROM aplicacion WHERE organizacion_id = %s AND lower(nombre) = lower(%s) AND client_id != %s",
+            (organizacion_id, nombre, client_id),
+        ).fetchone()
+        if duplicada:
+            raise NombreAppDuplicado(f"Ya existe una aplicación con el nombre '{nombre}'")
+
+        fila = conn.execute(
+            """
+            UPDATE aplicacion
+            SET nombre = %s, descripcion = %s
+            WHERE client_id = %s AND organizacion_id = %s
+            RETURNING client_id, nombre, descripcion
+            """,
+            (nombre, descripcion, client_id, organizacion_id),
+        ).fetchone()
+
+    if fila is None:
+        raise ValueError("Aplicación no encontrada")
+
+    return {"client_id": str(fila[0]), "nombre": fila[1], "descripcion": fila[2]}
+
+
+def eliminar_aplicacion(client_id, organizacion_id) -> None:
+    with _conectar() as conn:
+        fila = conn.execute(
+            "DELETE FROM aplicacion WHERE client_id = %s AND organizacion_id = %s RETURNING client_id",
+            (client_id, organizacion_id),
+        ).fetchone()
+
+    if fila is None:
+        raise ValueError("Aplicación no encontrada")

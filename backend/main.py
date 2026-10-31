@@ -10,10 +10,12 @@ from app.services.users import (
 )
 
 from app.routers.applications import router as applications_router
+from app.routers.auth_api import router as auth_api_router
 
 app = FastAPI(title="Authly")
 
 app.include_router(applications_router)
+app.include_router(auth_api_router)
 
 class RegistroEntrada(BaseModel):
     nombre: str
@@ -62,8 +64,12 @@ def login(datos: LoginEntrada):
         usuario = autenticar_usuario(datos.email, datos.password)
     except CredencialesInvalidas as e:
         raise HTTPException(status_code=401, detail=str(e))
-    return {"access_token": crear_token(usuario), "token_type": "bearer"}
-
+    token = crear_token({
+        "sub": usuario["id"],
+        "type": "admin",
+        "org_id": str(usuario["organizacion_id"]),
+    })
+    return {"access_token": token, "token_type": "bearer"}
 
 @app.get("/me")
 def me(usuario: dict = Depends(usuario_actual)):
