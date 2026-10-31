@@ -1,17 +1,16 @@
-import hashlib
 import re
-import secrets
 
 import psycopg
 from argon2 import PasswordHasher
 
 from app.database import obtener_conexion
+from app.services.verification import (
+    CodigoIncorrecto, CodigoInexistente, CodigoVencido, ErrorEnvioCodigo, IntentosAgotados,
+    LimiteCodigosExcedido, generar_codigo, validar_codigo,
+)
 from app.utils.validators import normalizar_email, validar_password
 
 _hasher = PasswordHasher()
-
-MINUTOS_VALIDEZ_CODIGO = 10
-MAX_INTENTOS = 5
 
 
 class RegistroInvalido(Exception):
@@ -28,10 +27,6 @@ def _conectar():
     if conexion is None:
         raise RuntimeError("No se pudo conectar a la base de datos")
     return conexion
-
-
-def _hash_codigo(email: str, codigo: str) -> str:
-    return hashlib.sha256(f"{email}:{codigo}".encode()).hexdigest()
 
 
 def _validar_datos(nombre, apellido, email, password, organizacion, cuit):
@@ -58,24 +53,15 @@ def pedir_codigo(nombre, apellido, email, password, organizacion, cuit) -> None:
     cuit = cuit.strip()
     _validar_datos(nombre, apellido, email, password, organizacion, cuit)
 
-    codigo = f"{secrets.randbelow(1_000_000):06d}"
     with _conectar() as conn:
         _verificar_disponibles(conn, email, cuit)
-        conn.execute(
-            "UPDATE codigo_administrador SET estado = 'reemplazado' "
-            "WHERE email = %s AND proposito = 'registro' AND estado = 'pendiente'",
-            (email,),
-        )
-        conn.execute(
-            """
-            INSERT INTO codigo_administrador (email, proposito, hash_codigo, vence_en)
-            VALUES (%s, 'registro', %s, now() + make_interval(mins => %s))
-            """,
-            (email, _hash_codigo(email, codigo), MINUTOS_VALIDEZ_CODIGO),
-        )
 
-    # TODO: reemplazar por el envío real de email cuando se defina el servicio.
-    print(f"[registro] Código de verificación para {email}: {codigo}", flush=True)
+    try:
+        generar_codigo(email, "registro")
+    except LimiteCodigosExcedido as e:
+        raise RegistroInvalido(str(e))
+    except ErrorEnvioCodigo as e:
+        raise RegistroInvalido(str(e))
 
 
 def confirmar_codigo(nombre, apellido, email, password, organizacion, cuit, codigo) -> dict:
@@ -85,35 +71,12 @@ def confirmar_codigo(nombre, apellido, email, password, organizacion, cuit, codi
 
     try:
         with _conectar() as conn:
-            fila = conn.execute(
-                """
-                SELECT id, hash_codigo, intentos, vence_en > now()
-                FROM codigo_administrador
-                WHERE email = %s AND proposito = 'registro' AND estado = 'pendiente'
-                ORDER BY emitido_en DESC LIMIT 1
-                FOR UPDATE
-                """,
-                (email,),
-            ).fetchone()
-            if fila is None:
-                raise RegistroInvalido("Primero solicite un código.", "codigo")
-            id_codigo, hash_guardado, intentos, vigente = fila
-            if not vigente:
-                raise RegistroInvalido("El código expiró. Genere un nuevo código.", "codigo")
-            if intentos >= MAX_INTENTOS:
-                raise RegistroInvalido(
-                    "Ha alcanzado el límite de intentos. Reinicie el registro.", reinicio=True
-                )
-
-            if not secrets.compare_digest(hash_guardado, _hash_codigo(email, codigo.strip())):
-                conn.execute("UPDATE codigo_administrador SET intentos = intentos + 1 WHERE id = %s", (id_codigo,))
-                conn.commit()  # el intento fallido se guarda aunque falle la operación
-                restantes = MAX_INTENTOS - intentos - 1
-                if restantes <= 0:
-                    raise RegistroInvalido(
-                        "Ha alcanzado el límite de intentos. Reinicie el registro.", reinicio=True
-                    )
-                raise RegistroInvalido(f"El código es incorrecto. {restantes} intentos restantes.", "codigo")
+            try:
+                validar_codigo(email, codigo, "registro", conn=conn)
+            except (CodigoInexistente, CodigoVencido, CodigoIncorrecto) as e:
+                raise RegistroInvalido(str(e), "codigo")
+            except IntentosAgotados as e:
+                raise RegistroInvalido(f"{e} Reinicie el registro.", reinicio=True)
 
             _verificar_disponibles(conn, email, cuit)
             org_id = conn.execute(
@@ -127,7 +90,6 @@ def confirmar_codigo(nombre, apellido, email, password, organizacion, cuit, codi
                 """,
                 (org_id, nombre.strip(), apellido.strip(), email, _hasher.hash(password)),
             ).fetchone()[0]
-            conn.execute("UPDATE codigo_administrador SET estado = 'usado' WHERE id = %s", (id_codigo,))
     except psycopg.errors.UniqueViolation:
         raise RegistroInvalido("El email o el CUIT ya no están disponibles.", reinicio=True)
 

@@ -31,6 +31,8 @@ services:
       JWT_PUBLIC_KEY_PATH: ${JWT_PUBLIC_KEY_PATH:-keys/public_key.pem}
       SMTP_HOST: mailpit
       SMTP_PORT: 1025
+      SMTP_FROM: ${SMTP_FROM:-no-reply@authly.local}
+      CODIGO_HMAC_KEY: ${CODIGO_HMAC_KEY}
     volumes:
       - ./backend/keys:/app/keys:ro
 

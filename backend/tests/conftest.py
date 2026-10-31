@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 
 from main import app
 from app.database import obtener_conexion
-from app.services import registro
+from app.services import verification
 
 # Estos tests usan la base de datos real (Supabase), así que todo lo que crean se puede
 # reconocer y borrar: emails que terminan en DOMINIO_TEST y CUITs que empiezan con PREFIJO_CUIT.
@@ -21,6 +21,7 @@ ADMIN = {
 CODIGO = "123456"
 
 client = TestClient(app)
+emails_enviados = []
 
 
 def _borrar_datos_de_prueba():
@@ -37,6 +38,7 @@ def _borrar_datos_de_prueba():
             ).fetchall()
         ]
         conn.execute("DELETE FROM codigo_administrador WHERE email LIKE %s", (f"%{DOMINIO_TEST}",))
+        conn.execute("DELETE FROM codigo_usuario WHERE email LIKE %s", (f"%{DOMINIO_TEST}",))
         conn.execute("DELETE FROM aplicacion WHERE organizacion_id = ANY(%s)", (orgs,))
         conn.execute("DELETE FROM administrador WHERE organizacion_id = ANY(%s)", (orgs,))
         conn.execute("DELETE FROM organizacion WHERE id = ANY(%s)", (orgs,))
@@ -44,8 +46,13 @@ def _borrar_datos_de_prueba():
 
 @pytest.fixture(autouse=True)
 def limpiar_datos_de_prueba(monkeypatch):
-    # el código de verificación queda fijo para poder confirmarlo sin leer el email
-    monkeypatch.setattr(registro.secrets, "randbelow", lambda n: int(CODIGO))
+    # el código de verificación queda fijo para poder confirmarlo sin leer el email,
+    # y los emails no se envían: se guardan en `emails_enviados`
+    monkeypatch.setattr(verification.secrets, "randbelow", lambda n: int(CODIGO))
+    emails_enviados.clear()
+    monkeypatch.setattr(
+        verification, "_enviar_email", lambda email, codigo, proposito: emails_enviados.append((email, codigo, proposito))
+    )
     _borrar_datos_de_prueba()
     yield
     _borrar_datos_de_prueba()
