@@ -43,7 +43,11 @@ formulario.addEventListener("submit", async function(evento) {
     botones.ingreso.disabled = false;
     botones.ingreso.textContent = "Iniciar sesión";
     if (!respuesta.exito) {
-        mostrarError(errores.general, "Credenciales inválidas.");
+        if (respuesta.motivo === "red" || respuesta.motivo === "error") {
+            mostrarError(errores.general, "No se pudo iniciar sesión. Intente nuevamente.");
+        } else {
+            mostrarError(errores.general, "Credenciales inválidas.");
+        }
         return;
     }  
     guardarSesion(respuesta.token, respuesta.email, respuesta.organizacion);

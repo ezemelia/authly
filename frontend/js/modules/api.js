@@ -1,5 +1,52 @@
 import { expirarSesion, obtenerToken } from "./auth.js";
 
+const BASE_API = "/api";
+
+const LISTAR_APLICACIONES_REAL = true; // poné false para volver a la simulación
+
+async function llamar(metodo, ruta, cuerpo, token) {
+    const encabezados = {};
+    if (cuerpo !== undefined) {
+        encabezados["Content-Type"] = "application/json";
+    }
+    if (token !== undefined) {
+        encabezados["Authorization"] = "Bearer " + token;
+    }
+
+    let respuesta;
+    try {
+        respuesta = await fetch(BASE_API + ruta, {
+            method: metodo,
+            headers: encabezados,
+            body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo)
+        });
+    } catch (error) {
+        return {ok: false, estado: 0, datos: null};
+    }
+
+    let datos = null;
+    try {
+        datos = await respuesta.json();
+    } catch (error) {
+        datos = null;
+    }
+    return {ok: respuesta.ok, estado: respuesta.status, datos: datos};
+}
+
+async function llamarConSesion(metodo, ruta, cuerpo) {
+    const token = obtenerToken();
+    if (token === null) {
+        expirarSesion();
+        await new Promise(function () {});
+    }
+    const resultado = await llamar(metodo, ruta, cuerpo, token);
+    if (resultado.estado === 401) {
+        expirarSesion();
+        await new Promise(function () {});
+    }
+    return resultado;
+}
+
 let intentos = 0;
 let codigosEmitidos = 0;
 let intentosRecuperacion = 0;
@@ -159,59 +206,6 @@ async function esperarConSesion() {
     }
 }
 
-export async function pedirCodigo(datos) {
-    await esperar(1000);
-    if (datos.email.trim().toLowerCase() === "registrado@example.com") {
-        return {exito: false, campo: "email", mensaje: "Ese email ya está registrado."};
-    }
-    
-    if (datos.cuit.trim() === "11111111111") {
-        return {exito: false, campo: "cuit", mensaje: "Este CUIT ya está registrado."};
-    }
-    if (datos.email.trim().toLowerCase() === "error-envio@example.com") {
-        return {exito: false, campo: "general", mensaje: "No se pudo enviar el correo."};
-    }
-    codigosEmitidos += 1;
-    if (codigosEmitidos > 3) {
-        return {exito: false, campo: "general", mensaje: "Ha superado el límite de códigos. Intente nuevamente más tarde."};
-        }
-    intentos = 0;     
-    return {exito: true};
-}
-
-export async function confirmarCodigo(datos) {
-    await esperar(1000);
-    if (datos.codigo === "000000") {
-        return {exito: false, campo: "codigo", mensaje: "El código expiró. Genere un nuevo código."};
-    }
-
-    if (datos.email === "no-disponible@example.com") {
-        intentos = 0;
-        return {exito: false, reinicio: true, campo: "email", mensaje: "El correo ingresado ya no está disponible."};
-    }
-
-    if (datos.cuit === "22222222222") {
-        intentos = 0;
-        return {exito: false, reinicio: true, campo: "cuit", mensaje: "El CUIT ingresado ya no está disponible."};
-    }
-  
-    if (datos.codigo !== "123456") {
-        intentos +=1;
-        if (intentos >= 5) {
-            intentos = 0;
-            return {exito: false, reinicio: true, mensaje: "Ha alcanzado el límite de intentos. Reinicie el registro."};
-        }
-        const restantes = 5 - intentos;
-        let texto = "intentos restantes.";
-        if (restantes === 1) {
-            texto = "intento restante.";
-        }
-        return {exito: false, campo: "codigo", mensaje: "El código es incorrecto. " + restantes + " " + texto};
-    }
-    intentos = 0;
-    return {exito: true};
-}
-
 export async function pedirCodigoRecuperacion(datos) {
     await esperar(1000);
     intentosRecuperacion = 0;
@@ -236,15 +230,114 @@ export async function cambiarPassword(datos) {
     return {exito: true};
 }
 
-export async function iniciarSesion(datos) {
-    await esperar(1000);
-    if (datos.email.trim().toLowerCase() === "admin@example.com" && datos.password === "Ejemplo123-") {
-        return {exito: true, token: "token-de-prueba", email: datos.email.trim().toLowerCase(), organizacion: "Authly inc."};
-    }
-    return {exito: false};
+function cuerpoDeRegistro(datos) {
+    return {
+        nombre: datos.nombre,
+        apellido: datos.apellido,
+        email: datos.email,
+        password: datos.password,
+        organizacion: datos.nombreOrg,
+        cuit: datos.cuit
+    };
 }
 
-export async function listarAplicaciones(opciones) {
+function traducirErrorRegistro(resultado) {
+    if (resultado.estado === 0) {
+        return {exito: false, campo: "general", mensaje: "No se pudo conectar con el servidor. Intente nuevamente."};
+    }
+    if (resultado.estado === 400 && resultado.datos !== null && typeof resultado.datos.detail === "string") {
+        let campo = resultado.datos.campo;
+        if (campo === undefined || campo === null) {
+            campo = "general";
+        } else if (campo === "organizacion") {
+            campo = "nombreOrg";
+        }
+        return {exito: false, campo: campo, mensaje: resultado.datos.detail, reinicio: resultado.datos.reinicio === true};
+    }
+    if (resultado.estado === 422) {
+        return {exito: false, campo: "general", mensaje: "Revise los datos ingresados."};
+    }
+    return {exito: false, campo: "general", mensaje: "No se pudo completar la operación. Intente nuevamente."};
+}
+
+export async function pedirCodigo(datos) {
+    const resultado = await llamar("POST", "/register/codigo", cuerpoDeRegistro(datos));
+    if (!resultado.ok) {
+        return traducirErrorRegistro(resultado);
+    }
+    return {exito: true};
+}
+
+export async function confirmarCodigo(datos) {
+    const cuerpo = cuerpoDeRegistro(datos);
+    cuerpo.codigo = datos.codigo;
+    const resultado = await llamar("POST", "/register/confirmar", cuerpo);
+    if (!resultado.ok) {
+        return traducirErrorRegistro(resultado);
+    }
+    return {exito: true};
+}
+
+export async function iniciarSesion(datos) {
+    const login = await llamar("POST", "/login", {email: datos.email, password: datos.password});
+    if (login.estado === 401 || login.estado === 422) {
+        return {exito: false};
+    }
+    if (!login.ok || login.datos === null) {
+        return {exito: false, motivo: login.estado === 0 ? "red" : "error"};
+    }
+
+    const token = login.datos.access_token;
+    const perfil = await llamar("GET", "/me", undefined, token);
+    if (!perfil.ok || perfil.datos === null) {
+        return {exito: false, motivo: perfil.estado === 0 ? "red" : "error"};
+    }
+
+    const admin = perfil.datos;
+    const organizacion = admin.organizacion || (admin.nombre + " " + admin.apellido);
+    return {exito: true, token: token, email: admin.email, organizacion: organizacion};
+}
+
+export async function crearAplicacion(datos) {
+    const resultado = await llamarConSesion("POST", "/platform/applications/", {nombre: datos.nombre, descripcion: datos.descripcion});
+    if (!resultado.ok) {
+        if (resultado.estado === 409) {
+            return {exito: false, campo: "nombre", mensaje: "Ya existe una aplicación con ese nombre."};
+        }
+        if (resultado.estado === 0) {
+            return {exito: false, campo: "general", mensaje: "No se pudo conectar con el servidor. Intente nuevamente."};
+        }
+        return {exito: false, campo: "general", mensaje: "No se pudo crear la aplicación. Intente nuevamente."};
+    }
+    const creada = resultado.datos;
+    return {
+        exito: true,
+        aplicacion: {clientId: creada.client_id, nombre: creada.nombre, descripcion: datos.descripcion.trim()},
+        secret: creada.client_secret
+    };
+}
+
+export async function regenerarSecret(clientId) {
+    const resultado = await llamarConSesion("POST", "/platform/applications/" + clientId + "/regenerar-secret", undefined);
+    if (!resultado.ok) {
+        return {exito: false};
+    }
+    return {exito: true, secret: resultado.datos.client_secret};
+}
+
+export async function editarAplicacion(clientId, datos) {
+    const resultado = await llamarConSesion("PUT", "/platform/applications/" + clientId, {nombre: datos.nombre, descripcion: datos.descripcion});
+    if (!resultado.ok) {
+        if (resultado.estado === 409) {
+            return {exito: false, campo: "nombre", mensaje: "Ya existe una aplicación con ese nombre."};
+        }
+        return {exito: false};
+    }
+    const editada = resultado.datos;
+    return {exito: true, aplicacion: {clientId: editada.client_id, nombre: editada.nombre, descripcion: editada.descripcion}};
+}
+
+async function listarAplicacionesSimulado(opciones) {
     await esperarConSesion();
 
     const ordenadas = aplicaciones.slice();
@@ -270,28 +363,42 @@ export async function listarAplicaciones(opciones) {
     };
 }
 
-export async function crearAplicacion(datos) {
-    await esperarConSesion();
-
-    const nombreNuevo = datos.nombre.trim().toLowerCase();
-    const yaExiste = aplicaciones.some(function (aplicacion) {
-        return aplicacion.nombre.trim().toLowerCase() === nombreNuevo;
-    });
-
-    if (yaExiste) {
-        return {exito: false, campo: "nombre", mensaje: "Ya existe una aplicación con ese nombre."};
+async function listarAplicacionesReal(opciones) {
+    const resultado = await llamarConSesion("GET", "/platform/applications/", undefined);
+    if (!resultado.ok) {
+        return {exito: false};
     }
 
-    const aplicacionNueva = {
-        clientId: crypto.randomUUID(),
-        nombre: datos.nombre.trim(),
-        descripcion: datos.descripcion.trim()
+    const todas = resultado.datos.slice();
+    todas.sort(function (a, b) {
+        return a.nombre.localeCompare(b.nombre, "es");
+    });
+
+    const inicio = (opciones.pagina - 1) * opciones.tamanio;
+    const deLaPagina = todas.slice(inicio, inicio + opciones.tamanio);
+
+    return {
+        exito: true,
+        aplicaciones: deLaPagina.map(function (aplicacion) {
+            return {
+                clientId: aplicacion.client_id,
+                nombre: aplicacion.nombre,
+                descripcion: aplicacion.descripcion,
+                // El backend todavía no informa cuántos usuarios tiene cada aplicación.
+                cantidadUsuarios: null
+            };
+        }),
+        total: todas.length,
+        // El backend todavía no informa el total de usuarios de la organización.
+        totalUsuarios: null
     };
+}
 
-    aplicaciones.push(aplicacionNueva);
-    guardarAplicaciones();
-
-    return {exito: true, aplicacion: aplicacionNueva, secret: crypto.randomUUID()};
+export async function listarAplicaciones(opciones) {
+    if (LISTAR_APLICACIONES_REAL) {
+        return listarAplicacionesReal(opciones);
+    }
+    return listarAplicacionesSimulado(opciones);
 }
 
 export async function obtenerAplicacion(clientId) {
@@ -303,42 +410,6 @@ export async function obtenerAplicacion(clientId) {
         return {exito: false};
     }
     return {exito: true, aplicacion: encontrada, cantidadUsuarios: contarUsuarios(clientId)};
-}
-
-export async function regenerarSecret(clientId) {
-    await esperarConSesion();
-    const existe = aplicaciones.some(function (candidata) {
-        return candidata.clientId === clientId;
-    });
-    if (!existe) {
-        return {exito: false};
-    }
-    return {exito: true, secret: crypto.randomUUID()};
-}
-
-export async function editarAplicacion(clientId, datos) {
-    await esperarConSesion();
-
-    const aplicacion = aplicaciones.find(function (candidata) {
-        return candidata.clientId === clientId;
-    });
-    if (aplicacion === undefined) {
-        return {exito: false};
-    }
-
-    const nombreNuevo = datos.nombre.trim().toLowerCase();
-    const yaExiste = aplicaciones.some(function (candidata) {
-        return candidata.clientId !== clientId && candidata.nombre.trim().toLowerCase() === nombreNuevo;
-    });
-    if (yaExiste) {
-        return {exito: false, campo: "nombre", mensaje: "Ya existe una aplicación con ese nombre."};
-    }
-
-    aplicacion.nombre = datos.nombre.trim();
-    aplicacion.descripcion = datos.descripcion.trim();
-    guardarAplicaciones();
-
-    return {exito: true, aplicacion};
 }
 
 export async function listarRoles(clientId) {

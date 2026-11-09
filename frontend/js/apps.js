@@ -88,7 +88,7 @@ function crearFila(aplicacion) {
     celdaClientId.append(textoClientId, botonCopiar);
     const celdaUsuarios = document.createElement("td");
     celdaUsuarios.dataset.etiqueta = "Usuarios";
-    celdaUsuarios.textContent = aplicacion.cantidadUsuarios;
+    celdaUsuarios.textContent = aplicacion.cantidadUsuarios === null ? "—" : aplicacion.cantidadUsuarios;
     fila.append(celdaTitulo, celdaClientId, celdaUsuarios);
 
     return fila;
@@ -106,7 +106,7 @@ function mostrarAplicaciones(aplicaciones, total, totalUsuarios) {
         estadoVacio.classList.remove("oculto");
     } else {
         tablaApps.classList.remove("oculto");
-        resumenApps.textContent = textoAplicaciones(total) + " · " + textoUsuarios(totalUsuarios) + " en total";
+        resumenApps.textContent = totalUsuarios === null ? textoAplicaciones(total) : textoAplicaciones(total) + " · " + textoUsuarios(totalUsuarios) + " en total";
         resumenApps.classList.remove("oculto");
         estadoVacio.classList.add("oculto");
     }

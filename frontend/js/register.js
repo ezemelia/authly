@@ -56,6 +56,39 @@ const formularios = {
 
 const avisoReenvio = document.getElementById("aviso-reenvio");
 
+function datosDelFormulario() {
+    return {
+        nombre: campos.nombre.value.trim(),
+        apellido: campos.apellido.value.trim(),
+        email: campos.email.value.trim().toLowerCase(),
+        password: campos.pass.value,
+        nombreOrg: campos.nombreOrg.value.trim(),
+        cuit: campos.cuit.value.trim()
+    };
+}
+
+function errorDelCampo(campo) {
+    if (campo === "nombre") {
+        return errores.nombre;
+    }
+    if (campo === "apellido") {
+        return errores.apellido;
+    }
+    if (campo === "email") {
+        return errores.email;
+    }
+    if (campo === "pass") {
+        return errores.pass;
+    }
+    if (campo === "nombreOrg") {
+        return errores.nombreOrg;
+    }
+    if (campo === "cuit") {
+        return errores.cuit;
+    }
+    return errores.general;
+}
+
 formularios.datos.addEventListener("submit", async function (evento) {
     evento.preventDefault();
     const resultados = [
@@ -74,21 +107,13 @@ formularios.datos.addEventListener("submit", async function (evento) {
     errores.general.classList.add("oculto");
     botones.continuar.disabled = true;
     botones.continuar.textContent = "Enviando...";
-    const respuesta = await pedirCodigo({ email: campos.email.value.trim().toLowerCase(), cuit: campos.cuit.value.trim() });
+    const respuesta = await pedirCodigo(datosDelFormulario());
     botones.continuar.disabled = false;
     botones.continuar.textContent = "Continuar";
 
     if (!respuesta.exito) {
-        if (respuesta.campo === "email") {
-            mostrarError(errores.email, respuesta.mensaje);
-        }
-        if (respuesta.campo === "cuit") {
-            mostrarError(errores.cuit, respuesta.mensaje);
-        }
-        if (respuesta.campo === "general") {
-            mostrarError(errores.general, respuesta.mensaje);
-        }
-    return;
+        mostrarError(errorDelCampo(respuesta.campo), respuesta.mensaje);
+        return;
     }
 
     irAlPaso(pasos, indicadores, "datos", "codigo");
@@ -101,15 +126,8 @@ formularios.codigo.addEventListener("submit", async function (evento) {
     evento.preventDefault();
     if (validarCodigo(campos.codigo, errores.codigo)) {
         avisoReenvio.classList.add("oculto");
-        const datos = {
-            codigo: campos.codigo.value.trim(),
-            nombre: campos.nombre.value.trim(),
-            apellido: campos.apellido.value.trim(),
-            email: campos.email.value.trim().toLowerCase(),
-            password: campos.pass.value,
-            nombreOrg: campos.nombreOrg.value.trim(),
-            cuit: campos.cuit.value.trim()
-        };
+        const datos = datosDelFormulario();
+        datos.codigo = campos.codigo.value.trim();
         botones.verificar.disabled = true;
         botones.verificar.textContent = "Verificando...";
         const respuesta = await confirmarCodigo(datos);
@@ -118,13 +136,7 @@ formularios.codigo.addEventListener("submit", async function (evento) {
         if (!respuesta.exito) {
             if (respuesta.reinicio) {
                 irAlPaso(pasos, indicadores, "codigo", "datos");
-                if (respuesta.campo === "email") {
-                    mostrarError(errores.email, respuesta.mensaje);
-                } else if (respuesta.campo === "cuit") {
-                    mostrarError(errores.cuit, respuesta.mensaje);
-                } else {
-                    mostrarError(errores.general, respuesta.mensaje);
-                }
+                mostrarError(errorDelCampo(respuesta.campo), respuesta.mensaje);
                 campos.codigo.value = "";
                 errores.codigo.classList.add("oculto");
                 return;
@@ -139,7 +151,7 @@ formularios.codigo.addEventListener("submit", async function (evento) {
 botones.reenviar.addEventListener("click", async function() {
     botones.reenviar.disabled = true;
     botones.reenviar.textContent = "Reenviando...";
-    const respuesta = await pedirCodigo({ email: campos.email.value.trim().toLowerCase(), cuit: campos.cuit.value.trim()});
+    const respuesta = await pedirCodigo(datosDelFormulario());
     botones.reenviar.disabled = false;
     botones.reenviar.textContent = "Reenviar código";
     if (!respuesta.exito) {
