@@ -40,23 +40,54 @@ input, button, textarea {
     position: fixed;
     top: 16px;
     right: 16px;
+    width: 40px;
+    height: 40px;
     background-color: transparent;
     border: none;
-    padding: 8px;
+    padding: 0;
     cursor: pointer;
     color: var(--texto-principal);
 }
 
+/* Los dos íconos se superponen en el centro del botón (en vez de ocupar lugar
+   por turnos con display: none), para poder animar uno desapareciendo
+   mientras el otro aparece, en lugar de reemplazarse de golpe. */
+.icono-sol,
+.icono-luna {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    margin: auto;
+    transition: opacity 0.3s ease, transform 0.4s ease;
+}
+
 .icono-sol {
-    display: none;
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.5);
+}
+
+.icono-luna {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
 }
 
 :root[data-tema="oscuro"] .icono-luna {
-    display: none;
+    opacity: 0;
+    transform: rotate(90deg) scale(0.5);
 }
 
 :root[data-tema="oscuro"] .icono-sol {
-    display: block;
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .icono-sol,
+    .icono-luna {
+        transition: none;
+    }
 }
 
 .oculto {

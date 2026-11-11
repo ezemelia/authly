@@ -30,14 +30,36 @@ export function activarOjo(boton, campo) {
     });
 }
 
+export function activarCarga(boton, textoCargando) {
+    const textoOriginal = boton.textContent;
+    boton.disabled = true;
+    boton.textContent = textoCargando;
+    boton.classList.add("boton-cargando");
+    return function desactivarCarga() {
+        boton.disabled = false;
+        boton.textContent = textoOriginal;
+        boton.classList.remove("boton-cargando");
+    };
+}
+
+export function conTransicion(cambiarDom) {
+    if (!document.startViewTransition) {
+        cambiarDom();
+        return;
+    }
+    document.startViewTransition(cambiarDom);
+}
+
 export function activarPestanas(pestanas, paneles, alActivar) {
     for (const nombre in pestanas) {
         pestanas[nombre].addEventListener("click", function () {
-            for (const otro in pestanas) {
-                const activa = otro === nombre;
-                pestanas[otro].setAttribute("aria-selected", activa ? "true" : "false");
-                paneles[otro].classList.toggle("oculto", !activa);
-            }
+            conTransicion(function () {
+                for (const otro in pestanas) {
+                    const activa = otro === nombre;
+                    pestanas[otro].setAttribute("aria-selected", activa ? "true" : "false");
+                    paneles[otro].classList.toggle("oculto", !activa);
+                }
+            });
             if (alActivar !== undefined) {
                 alActivar(nombre);
             }
@@ -111,4 +133,3 @@ export function crearPaginador(nav, alCambiar) {
 
     return {mostrar};
 }
-

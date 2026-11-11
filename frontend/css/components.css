@@ -287,3 +287,129 @@ button:disabled {
 .boton-enlace-secundario {
     text-align: center;
 }
+
+dialog {
+    transition: opacity 0.2s ease, transform 0.2s ease, display 0.2s allow-discrete, overlay 0.2s allow-discrete;
+    opacity: 0;
+    transform: scale(0.96);
+}
+
+dialog[open] {
+    opacity: 1;
+    transform: scale(1);
+}
+
+@starting-style {
+    dialog[open] {
+        opacity: 0;
+        transform: scale(0.96);
+    }
+}
+
+dialog::backdrop {
+    transition: background 0.2s ease, display 0.2s allow-discrete, overlay 0.2s allow-discrete;
+    background: rgb(0 0 0 / 0%);
+}
+
+dialog[open]::backdrop {
+    background: rgb(0 0 0 / 40%);
+}
+
+@starting-style {
+    dialog[open]::backdrop {
+        background: rgb(0 0 0 / 0%);
+    }
+}
+
+/* ---------- Toasts: entran deslizándose, salen con un desvanecido ---------- */
+.toast {
+    animation: toast-entrada 0.25s ease;
+}
+
+.toast.toast-saliendo {
+    animation: toast-salida 0.2s ease forwards;
+}
+
+@keyframes toast-entrada {
+    from {
+        opacity: 0;
+        transform: translateX(24px);
+    }
+}
+
+@keyframes toast-salida {
+    to {
+        opacity: 0;
+        transform: translateX(24px);
+    }
+}
+
+/* ---------- Un temblor breve en los mensajes de error, para llamar la atención ---------- */
+.mensaje-error.tiembla {
+    animation: temblar 0.4s ease;
+}
+
+@keyframes temblar {
+    10%, 90% { transform: translateX(-1px); }
+    20%, 80% { transform: translateX(2px); }
+    30%, 50%, 70% { transform: translateX(-4px); }
+    40%, 60% { transform: translateX(4px); }
+}
+
+/* ---------- Un espiral chico en los botones mientras procesan algo ---------- */
+.boton-cargando {
+    position: relative;
+    padding-right: 40px;
+}
+
+.boton-cargando::after {
+    content: "";
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    width: 14px;
+    height: 14px;
+    margin-top: -7px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: girar 0.6s linear infinite;
+}
+
+@keyframes girar {
+    to { transform: rotate(360deg); }
+}
+
+/* ---------- Las filas de las tablas aparecen de a poco, no todas de golpe ---------- */
+.tabla tbody tr {
+    animation: fila-aparece 0.25s ease backwards;
+}
+
+.tabla tbody tr:nth-child(1) { animation-delay: 0.02s; }
+.tabla tbody tr:nth-child(2) { animation-delay: 0.05s; }
+.tabla tbody tr:nth-child(3) { animation-delay: 0.08s; }
+.tabla tbody tr:nth-child(4) { animation-delay: 0.11s; }
+.tabla tbody tr:nth-child(5) { animation-delay: 0.14s; }
+.tabla tbody tr:nth-child(6) { animation-delay: 0.17s; }
+.tabla tbody tr:nth-child(7) { animation-delay: 0.20s; }
+.tabla tbody tr:nth-child(8) { animation-delay: 0.23s; }
+.tabla tbody tr:nth-child(9) { animation-delay: 0.26s; }
+.tabla tbody tr:nth-child(10) { animation-delay: 0.29s; }
+
+@keyframes fila-aparece {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+}
+
+/* ---------- Respeta a quien pidió reducir el movimiento en todas las animaciones de arriba ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .toast,
+    .toast.toast-saliendo,
+    .mensaje-error.tiembla,
+    .boton-cargando::after,
+    .tabla tbody tr {
+        animation: none;
+    }
+}

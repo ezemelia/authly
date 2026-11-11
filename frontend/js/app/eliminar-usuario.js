@@ -1,4 +1,5 @@
 import { eliminarUsuario } from "../modules/api.js";
+import { activarCarga } from "../modules/components.js";
 import { mostrarError, mostrarToast } from "../modules/notifications.js";
 import { estado } from "./estado.js";
 import { cargarRoles } from "./roles.js";
@@ -40,11 +41,9 @@ export function iniciarEliminarUsuario() {
     eliminarUsuarioModal.botonConfirmar.addEventListener("click", async function () {
         const usuario = usuarioAEliminar;
 
-        eliminarUsuarioModal.botonConfirmar.disabled = true;
-        eliminarUsuarioModal.botonConfirmar.textContent = "Eliminando...";
+        const listo = activarCarga(eliminarUsuarioModal.botonConfirmar, "Eliminando...");
         const resultado = await eliminarUsuario(estado.aplicacionActual.clientId, usuario.id);
-        eliminarUsuarioModal.botonConfirmar.disabled = false;
-        eliminarUsuarioModal.botonConfirmar.textContent = "Eliminar usuario";
+        listo();
 
         if (!resultado.exito) {
             if (resultado.motivo === "usuario-inexistente") {

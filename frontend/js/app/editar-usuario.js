@@ -1,4 +1,5 @@
 import { editarUsuario } from "../modules/api.js";
+import { activarCarga } from "../modules/components.js";
 import { mostrarError, mostrarToast } from "../modules/notifications.js";
 import { validarCampo } from "../modules/validators.js";
 import { estado } from "./estado.js";
@@ -121,15 +122,13 @@ export function iniciarEditarUsuario() {
         }
 
         const usuario = usuarioEnEdicion;
-        editarUsuarioModal.botonGuardar.disabled = true;
-        editarUsuarioModal.botonGuardar.textContent = "Guardando...";
+        const listo = activarCarga(editarUsuarioModal.botonGuardar, "Guardando...");
         const resultado = await editarUsuario(estado.aplicacionActual.clientId, usuario.id, {
             nombre: editarUsuarioModal.nombre.value,
             apellido: editarUsuarioModal.apellido.value,
             roles: rolesElegidos
         });
-        editarUsuarioModal.botonGuardar.disabled = false;
-        editarUsuarioModal.botonGuardar.textContent = "Guardar";
+        listo();
 
         if (!resultado.exito) {
             if (resultado.campo === "nombre") {

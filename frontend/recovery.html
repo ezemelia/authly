@@ -3,12 +3,18 @@
 
     <head>
         <meta charset="UTF-8">
+         <script>
+            if (localStorage.getItem("tema") === "oscuro") {
+            document.documentElement.setAttribute("data-tema", "oscuro");
+            }
+        </script>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Recuperar contraseña | Authly</title>
         <link rel="stylesheet" href="css/variables.css">
         <link rel="stylesheet" href="css/base.css">
         <link rel="stylesheet" href="css/components.css">
         <link rel="stylesheet" href="css/auth.css">
+        <link rel="stylesheet" href="css/transiciones.css">
     </head>
     
     <body>

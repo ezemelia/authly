@@ -1,5 +1,5 @@
 import { regenerarSecret } from "../modules/api.js";
-import { activarCopia } from "../modules/components.js";
+import { activarCarga, activarCopia } from "../modules/components.js";
 import { mostrarError } from "../modules/notifications.js";
 import { estado } from "./estado.js";
 
@@ -35,11 +35,9 @@ export function iniciarCredenciales() {
     });
 
     confirmacion.botonConfirmar.addEventListener("click", async function () {
-        confirmacion.botonConfirmar.disabled = true;
-        confirmacion.botonConfirmar.textContent = "Regenerando...";
+        const listo = activarCarga(confirmacion.botonConfirmar, "Regenerando...");
         const resultado = await regenerarSecret(estado.aplicacionActual.clientId);
-        confirmacion.botonConfirmar.disabled = false;
-        confirmacion.botonConfirmar.textContent = "Regenerar";
+        listo();
 
         if (!resultado.exito) {
             mostrarError(confirmacion.error, "No se pudo regenerar el client secret. Intente nuevamente.");

@@ -1,6 +1,6 @@
 import { validarCampo, validarEmail} from "./modules/validators.js";
 import { iniciarTema } from "./modules/theme.js";
-import { activarOjo } from "./modules/components.js";
+import { activarCarga, activarOjo } from "./modules/components.js";
 import { iniciarSesion } from "./modules/api.js";
 import { guardarSesion } from "./modules/auth.js";
 import { mostrarError, mostrarAvisoPendiente } from "./modules/notifications.js";
@@ -37,11 +37,9 @@ formulario.addEventListener("submit", async function(evento) {
         return;
     }
     errores.general.classList.add("oculto");
-    botones.ingreso.disabled = true;
-    botones.ingreso.textContent = "Ingresando...";
+    const listo = activarCarga(botones.ingreso, "Ingresando...");
     const respuesta = await iniciarSesion({email: campos.email.value.trim().toLowerCase(), password: campos.pass.value});
-    botones.ingreso.disabled = false;
-    botones.ingreso.textContent = "Iniciar sesión";
+    listo();
     if (!respuesta.exito) {
         if (respuesta.motivo === "red" || respuesta.motivo === "error") {
             mostrarError(errores.general, "No se pudo iniciar sesión. Intente nuevamente.");

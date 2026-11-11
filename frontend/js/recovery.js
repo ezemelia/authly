@@ -1,5 +1,5 @@
 import { iniciarTema } from "./modules/theme.js";
-import { activarOjo, irAlPaso } from "./modules/components.js";
+import { activarCarga, activarOjo, irAlPaso } from "./modules/components.js";
 import { validarEmail, validarCodigo, validarPass, validarConfirmacion } from "./modules/validators.js";
 import { pedirCodigoRecuperacion, cambiarPassword } from "./modules/api.js";
 import { mostrarError } from "./modules/notifications.js";
@@ -54,11 +54,9 @@ formularios.correo.addEventListener("submit", async function (evento) {
         return;
     }
 
-    botones.envio.disabled = true;
-    botones.envio.textContent = "Enviando...";
+    const listo = activarCarga(botones.envio, "Enviando...");
     await pedirCodigoRecuperacion({ email: campos.email.value.trim().toLowerCase()});
-    botones.envio.disabled = false;
-    botones.envio.textContent = "Enviar código";
+    listo();
     irAlPaso(pasos, indicadores, "correo", "codigo");
 });
 
@@ -73,11 +71,9 @@ formularios.codigo.addEventListener("submit", async function (evento) {
         return;
     }
 
-    botones.cambio.disabled = true;
-    botones.cambio.textContent = "Cambiando...";
+    const listo = activarCarga(botones.cambio, "Cambiando...");
     const respuesta = await cambiarPassword({ email: campos.email.value.trim().toLowerCase(), codigo: campos.codigo.value.trim(), password: campos.pass.value});
-    botones.cambio.disabled = false;
-    botones.cambio.textContent = "Cambiar contraseña";
+    listo();
     if (!respuesta.exito) {
     if (respuesta.campo === "codigo") {
         mostrarError(errores.codigo, "Código inválido o vencido.");

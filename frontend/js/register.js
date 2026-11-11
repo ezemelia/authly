@@ -2,7 +2,7 @@ import { validarCampo, validarEmail, validarPass, validarConfirmacion, validarCu
 import { iniciarTema } from "./modules/theme.js";
 import { pedirCodigo, confirmarCodigo } from "./modules/api.js";
 import { mostrarError } from "./modules/notifications.js";
-import { activarOjo, irAlPaso } from "./modules/components.js";
+import { activarCarga, activarOjo, irAlPaso } from "./modules/components.js";
 
 iniciarTema();
 
@@ -105,11 +105,9 @@ formularios.datos.addEventListener("submit", async function (evento) {
     }
 
     errores.general.classList.add("oculto");
-    botones.continuar.disabled = true;
-    botones.continuar.textContent = "Enviando...";
+    const listo = activarCarga(botones.continuar, "Enviando...");
     const respuesta = await pedirCodigo(datosDelFormulario());
-    botones.continuar.disabled = false;
-    botones.continuar.textContent = "Continuar";
+    listo();
 
     if (!respuesta.exito) {
         mostrarError(errorDelCampo(respuesta.campo), respuesta.mensaje);
@@ -128,11 +126,9 @@ formularios.codigo.addEventListener("submit", async function (evento) {
         avisoReenvio.classList.add("oculto");
         const datos = datosDelFormulario();
         datos.codigo = campos.codigo.value.trim();
-        botones.verificar.disabled = true;
-        botones.verificar.textContent = "Verificando...";
+        const listo = activarCarga(botones.verificar, "Verificando...");
         const respuesta = await confirmarCodigo(datos);
-        botones.verificar.disabled = false;
-        botones.verificar.textContent = "Verificar";
+        listo();
         if (!respuesta.exito) {
             if (respuesta.reinicio) {
                 irAlPaso(pasos, indicadores, "codigo", "datos");
@@ -149,11 +145,9 @@ formularios.codigo.addEventListener("submit", async function (evento) {
 });
 
 botones.reenviar.addEventListener("click", async function() {
-    botones.reenviar.disabled = true;
-    botones.reenviar.textContent = "Reenviando...";
+    const listo = activarCarga(botones.reenviar, "Reenviando...");
     const respuesta = await pedirCodigo(datosDelFormulario());
-    botones.reenviar.disabled = false;
-    botones.reenviar.textContent = "Reenviar código";
+    listo();
     if (!respuesta.exito) {
         mostrarError(errores.codigo, respuesta.mensaje);
         avisoReenvio.classList.add("oculto");
@@ -163,6 +157,3 @@ botones.reenviar.addEventListener("click", async function() {
     avisoReenvio.textContent = "Le enviamos un código nuevo. Revise su correo.";
     avisoReenvio.classList.remove("oculto");
 });
-
-
-

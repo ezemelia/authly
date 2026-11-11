@@ -1,0 +1,34 @@
+/* Que cualquier desplazamiento de la página sea suave, no de golpe */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Transición entre páginas (navegación completa: login -> apps -> app.html, etc.) */
+@view-transition {
+    navigation: auto;
+}
+
+/* Solo el encabezado tiene nombre propio: si el logo (adentro del encabezado en
+   apps.html y app.html) tuviera el mismo nombre, habría dos elementos con el
+   mismo view-transition-name al mismo tiempo, y el navegador cancela toda la
+   animación sin avisar. */
+header {
+    view-transition-name: encabezado;
+}
+
+/* Respeta a quien configuró su sistema para reducir el movimiento */
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    @view-transition {
+        navigation: none;
+    }
+
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+        animation: none !important;
+    }
+}

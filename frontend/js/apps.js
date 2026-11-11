@@ -4,7 +4,7 @@ import { listarAplicaciones, crearAplicacion } from "./modules/api.js";
 import { validarCampo } from "./modules/validators.js";
 import { mostrarError, mostrarAvisoPendiente } from "./modules/notifications.js";
 import { iniciarEncabezado } from "./modules/encabezado.js";
-import { activarCopia, crearPaginador } from "./modules/components.js";
+import { activarCarga, activarCopia, crearPaginador } from "./modules/components.js";
 import { textoUsuarios } from "./modules/utils.js";
 
 exigirSesion();
@@ -163,11 +163,9 @@ crearApp.formulario.addEventListener("submit", async function(evento) {
         return;
     }
 
-    crearApp.botonGuardar.disabled = true;
-    crearApp.botonGuardar.textContent = "Creando...";
+    const listo = activarCarga(crearApp.botonGuardar, "Creando...");
     const resultado = await crearAplicacion({nombre: crearApp.nombre.value, descripcion: crearApp.descripcion.value});
-    crearApp.botonGuardar.disabled = false;
-    crearApp.botonGuardar.textContent = "Crear";
+    listo();
 
     if (!resultado.exito) {
         if (resultado.campo === "nombre") {
@@ -211,4 +209,3 @@ credenciales.modal.addEventListener("close", function () {
 });
 
 cargarAplicaciones();
-

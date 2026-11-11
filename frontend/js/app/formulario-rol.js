@@ -1,4 +1,5 @@
 import { crearRol, editarRol } from "../modules/api.js";
+import { activarCarga } from "../modules/components.js";
 import { mostrarError, mostrarToast } from "../modules/notifications.js";
 import { normalizar } from "../modules/utils.js";
 import { validarCampo } from "../modules/validators.js";
@@ -119,10 +120,7 @@ function validarPermisos() {
 
 async function guardarRol(datos) {
     const editando = rolEnEdicion !== null;
-    const textoBoton = formularioRol.botonGuardar.textContent;
-
-    formularioRol.botonGuardar.disabled = true;
-    formularioRol.botonGuardar.textContent = editando ? "Guardando..." : "Creando...";
+    const listo = activarCarga(formularioRol.botonGuardar, editando ? "Guardando..." : "Creando...");
 
     let resultado;
     if (editando) {
@@ -131,8 +129,7 @@ async function guardarRol(datos) {
         resultado = await crearRol(estado.aplicacionActual.clientId, datos);
     }
 
-    formularioRol.botonGuardar.disabled = false;
-    formularioRol.botonGuardar.textContent = textoBoton;
+    listo();
 
     if (!resultado.exito) {
         if (resultado.campo === "nombre") {

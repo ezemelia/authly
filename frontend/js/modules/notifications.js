@@ -1,6 +1,11 @@
 export function mostrarError(elemento, mensaje) {
     elemento.textContent = mensaje;
     elemento.classList.remove("oculto");
+    // Se saca y se vuelve a poner la clase, forzando un reflow en el medio, para que
+    // el temblor se repita aunque el mismo error ya estuviera mostrado antes.
+    elemento.classList.remove("tiembla");
+    void elemento.offsetWidth;
+    elemento.classList.add("tiembla");
 }
 
 const contenedorToasts = document.createElement("div");
@@ -8,6 +13,18 @@ contenedorToasts.classList.add("contenedor-toasts");
 contenedorToasts.setAttribute("role", "status");
 contenedorToasts.setAttribute("aria-live", "polite");
 document.body.append(contenedorToasts);
+
+function cerrarToast(toast) {
+    // Dispara la animación de salida. El elemento se saca recién cuando termina
+    // (por el evento, o por la red de seguridad del setTimeout si la animación
+    // estuviera desactivada, por ejemplo con "reducir movimiento" del sistema).
+    toast.classList.add("toast-saliendo");
+    const sacar = function () {
+        toast.remove();
+    };
+    toast.addEventListener("animationend", sacar, {once: true});
+    setTimeout(sacar, 250);
+}
 
 export function mostrarToast(mensaje, tipo) {
     const toast = document.createElement("div");
@@ -22,7 +39,7 @@ export function mostrarToast(mensaje, tipo) {
     cerrar.setAttribute("aria-label", "Cerrar aviso");
     cerrar.textContent = "×";
     cerrar.addEventListener("click", function () {
-        toast.remove();
+        cerrarToast(toast);
     });
 
     toast.append(texto, cerrar);
@@ -30,7 +47,7 @@ export function mostrarToast(mensaje, tipo) {
 
     const duracion = tipo === "error" ? 5000 : 3000;
     setTimeout(function () {
-        toast.remove();
+        cerrarToast(toast);
     }, duracion);
 }
 

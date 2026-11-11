@@ -1,4 +1,5 @@
 import { eliminarRol } from "../modules/api.js";
+import { activarCarga } from "../modules/components.js";
 import { mostrarError, mostrarToast } from "../modules/notifications.js";
 import { textoUsuarios } from "../modules/utils.js";
 import { estado } from "./estado.js";
@@ -57,11 +58,9 @@ export function iniciarEliminarRol() {
     eliminarRolModal.botonConfirmar.addEventListener("click", async function () {
         const rol = rolAEliminar;
 
-        eliminarRolModal.botonConfirmar.disabled = true;
-        eliminarRolModal.botonConfirmar.textContent = "Eliminando...";
+        const listo = activarCarga(eliminarRolModal.botonConfirmar, "Eliminando...");
         const resultado = await eliminarRol(estado.aplicacionActual.clientId, rol.id);
-        eliminarRolModal.botonConfirmar.disabled = false;
-        eliminarRolModal.botonConfirmar.textContent = "Eliminar";
+        listo();
 
         if (!resultado.exito) {
             if (resultado.motivo === "tiene-usuarios") {

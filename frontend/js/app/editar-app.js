@@ -1,4 +1,5 @@
 import { editarAplicacion } from "../modules/api.js";
+import { activarCarga } from "../modules/components.js";
 import { mostrarError } from "../modules/notifications.js";
 import { validarCampo } from "../modules/validators.js";
 import { estado } from "./estado.js";
@@ -37,11 +38,9 @@ export function iniciarEditarApp() {
             return;
         }
 
-        editar.botonGuardar.disabled = true;
-        editar.botonGuardar.textContent = "Guardando...";
+        const listo = activarCarga(editar.botonGuardar, "Guardando...");
         const resultado = await editarAplicacion(estado.aplicacionActual.clientId, {nombre: editar.nombre.value, descripcion: editar.descripcion.value});
-        editar.botonGuardar.disabled = false;
-        editar.botonGuardar.textContent = "Guardar";
+        listo();
 
         if (!resultado.exito) {
             if (resultado.campo === "nombre") {

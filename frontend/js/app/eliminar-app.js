@@ -1,4 +1,5 @@
 import { eliminarAplicacion } from "../modules/api.js";
+import { activarCarga } from "../modules/components.js";
 import { mostrarError, guardarAvisoPendiente } from "../modules/notifications.js";
 import { normalizar, textoUsuarios } from "../modules/utils.js";
 import { estado } from "./estado.js";
@@ -74,10 +75,9 @@ export function iniciarEliminarApp() {
     eliminarAppModal.botonConfirmar.addEventListener("click", async function () {
         const aplicacion = estado.aplicacionActual;
 
-        eliminarAppModal.botonConfirmar.disabled = true;
-        eliminarAppModal.botonConfirmar.textContent = "Eliminando...";
+        const listo = activarCarga(eliminarAppModal.botonConfirmar, "Eliminando...");
         const resultado = await eliminarAplicacion(aplicacion.clientId);
-        eliminarAppModal.botonConfirmar.textContent = "Eliminar aplicación";
+        listo();
 
         if (!resultado.exito) {
             if (resultado.motivo === "tiene-usuarios") {
@@ -85,7 +85,6 @@ export function iniciarEliminarApp() {
                 prepararEliminarApp();
                 mostrarError(eliminarAppModal.error, "La aplicación ahora tiene " + textoUsuarios(resultado.cantidadUsuarios) + ", así que no se eliminó.");
             } else {
-                eliminarAppModal.botonConfirmar.disabled = false;
                 mostrarError(eliminarAppModal.error, "No se pudo eliminar la aplicación. Intente nuevamente.");
             }
             return;
