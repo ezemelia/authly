@@ -6,6 +6,8 @@ from app.services.auth import crear_token
 from app.services.users import autenticar_usuario_app, CredencialesInvalidas
 from app.utils.validators import normalizar_email, validar_password
 from app.database import obtener_conexion
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 
 from app.services.verification import (
     generar_codigo, validar_codigo,
@@ -32,6 +34,14 @@ class VerificarRegistroEntrada(BaseModel):
     email: str
     password: str
     codigo: str
+
+class RecuperarPasswordEntrada(BaseModel):
+    email: str
+
+class ResetearPasswordEntrada(BaseModel):
+    email: str
+    codigo: str
+    new_password: str
 
 @router.get("/public-key")
 def obtener_clave_publica():
@@ -188,3 +198,89 @@ def verificar_registro(datos: VerificarRegistroEntrada, app: dict = Depends(apli
         conn.close()
 
     return {"message": "Cuenta verificada exitosamente."}
+
+@router.post("/password/recover")
+def recuperar_password(datos: RecuperarPasswordEntrada, app: dict = Depends(aplicacion_actual)):
+    """CU-11 paso 1: Envía código de recuperación al email del usuario."""
+    email = normalizar_email(datos.email)
+
+    try:
+        conn = obtener_conexion()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT 1 FROM authly.usuario WHERE email = %s AND aplicacion_id = %s",
+                    (email, app["id"]),
+                )
+                if cur.fetchone() is None:
+                    return {"message": "Si el email está registrado, se envió un código de recuperación."}
+        finally:
+            conn.close()
+
+        generar_codigo(email, "recuperacion", app["id"])
+    except LimiteCodigosExcedido:
+        raise HTTPException(status_code=429, detail="Demasiados intentos. Intente más tarde.")
+    except ErrorEnvioCodigo:
+        raise HTTPException(status_code=500, detail="No se pudo enviar el código.")
+
+    return {"message": "Si el email está registrado, se envió un código de recuperación."}
+
+@router.post("/password/reset")
+def resetear_password(datos: ResetearPasswordEntrada, app: dict = Depends(aplicacion_actual)):
+    """CU-11 paso 2: Valida el código y actualiza la contraseña."""
+    email = normalizar_email(datos.email)
+    hasher = PasswordHasher()
+
+    try:
+        validar_codigo(email, datos.codigo, "recuperacion", app["id"])
+    except CodigoInexistente as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except CodigoVencido as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except CodigoIncorrecto as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except IntentosAgotados as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    try:
+        validar_password(datos.new_password)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    conn = obtener_conexion()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Error de conexión a la base de datos")
+
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, hash_contrasena FROM authly.usuario WHERE email = %s AND aplicacion_id = %s",
+                (email, app["id"]),
+            )
+            fila = cur.fetchone()
+            if fila is None:
+                raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+            usuario_id, hash_actual = fila
+
+            try:
+                if hasher.verify(hash_actual, datos.new_password):
+                    raise HTTPException(status_code=400, detail="La nueva contraseña debe ser diferente a la actual")
+            except VerifyMismatchError:
+                pass
+
+            cur.execute(
+                "UPDATE authly.usuario SET hash_contrasena = %s WHERE id = %s",
+                (hasher.hash(datos.new_password), usuario_id),
+            )
+        conn.commit()
+    except HTTPException:
+        conn.rollback()
+        raise
+    except Exception:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail="Error interno al actualizar la contraseña")
+    finally:
+        conn.close()
+
+    return {"message": "Contraseña actualizada exitosamente."}
