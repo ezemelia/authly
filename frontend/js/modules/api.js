@@ -3,6 +3,11 @@ import { expirarSesion, obtenerToken } from "./auth.js";
 const BASE_API = "/api";
 
 const LISTAR_APLICACIONES_REAL = true; // poné false para volver a la simulación
+const OBTENER_APLICACION_REAL = true; // poné false para volver a la simulación
+const ELIMINAR_APLICACION_REAL = true; // poné false para volver a la simulación
+const ROLES_REAL = true; // poné false para volver a la simulación
+const USUARIOS_REAL = true; // poné false para volver a la simulación
+const RECUPERACION_REAL = true; // poné false para volver a la simulación
 
 async function llamar(metodo, ruta, cuerpo, token) {
     const encabezados = {};
@@ -206,13 +211,13 @@ async function esperarConSesion() {
     }
 }
 
-export async function pedirCodigoRecuperacion(datos) {
+async function pedirCodigoRecuperacionSimulado(datos) {
     await esperar(1000);
     intentosRecuperacion = 0;
     return {exito: true};
 }
 
-export async function cambiarPassword(datos) {
+async function cambiarPasswordSimulado(datos) {
     await esperar(1000);
     if (intentosRecuperacion >= 5) {
         return {exito: false, campo: "codigo"};
@@ -228,6 +233,41 @@ export async function cambiarPassword(datos) {
     }
     intentosRecuperacion = 0;
     return {exito: true};
+}
+
+async function pedirCodigoRecuperacionReal(datos) {
+    // Nunca revela si la cuenta existe: se avisa siempre lo mismo, haya o no haya pasado algo.
+    await llamar("POST", "/recovery/codigo", {email: datos.email});
+    return {exito: true};
+}
+
+async function cambiarPasswordReal(datos) {
+    const resultado = await llamar("POST", "/recovery/confirmar", {
+        email: datos.email,
+        codigo: datos.codigo,
+        password: datos.password
+    });
+    if (!resultado.ok) {
+        if (resultado.datos !== null && typeof resultado.datos.detail === "string") {
+            return {exito: false, campo: resultado.datos.campo || "general", mensaje: resultado.datos.detail};
+        }
+        return {exito: false, campo: "general"};
+    }
+    return {exito: true};
+}
+
+export async function pedirCodigoRecuperacion(datos) {
+    if (RECUPERACION_REAL) {
+        return pedirCodigoRecuperacionReal(datos);
+    }
+    return pedirCodigoRecuperacionSimulado(datos);
+}
+
+export async function cambiarPassword(datos) {
+    if (RECUPERACION_REAL) {
+        return cambiarPasswordReal(datos);
+    }
+    return cambiarPasswordSimulado(datos);
 }
 
 function cuerpoDeRegistro(datos) {
@@ -364,33 +404,28 @@ async function listarAplicacionesSimulado(opciones) {
 }
 
 async function listarAplicacionesReal(opciones) {
-    const resultado = await llamarConSesion("GET", "/platform/applications/", undefined);
+    const resultado = await llamarConSesion(
+        "GET",
+        "/platform/applications/?pagina=" + opciones.pagina + "&tamanio=" + opciones.tamanio,
+        undefined
+    );
     if (!resultado.ok) {
         return {exito: false};
     }
 
-    const todas = resultado.datos.slice();
-    todas.sort(function (a, b) {
-        return a.nombre.localeCompare(b.nombre, "es");
-    });
-
-    const inicio = (opciones.pagina - 1) * opciones.tamanio;
-    const deLaPagina = todas.slice(inicio, inicio + opciones.tamanio);
-
+    const datos = resultado.datos;
     return {
         exito: true,
-        aplicaciones: deLaPagina.map(function (aplicacion) {
+        aplicaciones: datos.aplicaciones.map(function (aplicacion) {
             return {
                 clientId: aplicacion.client_id,
                 nombre: aplicacion.nombre,
                 descripcion: aplicacion.descripcion,
-                // El backend todavía no informa cuántos usuarios tiene cada aplicación.
-                cantidadUsuarios: null
+                cantidadUsuarios: aplicacion.cantidad_usuarios
             };
         }),
-        total: todas.length,
-        // El backend todavía no informa el total de usuarios de la organización.
-        totalUsuarios: null
+        total: datos.total_apps,
+        totalUsuarios: datos.total_usuarios_organizacion
     };
 }
 
@@ -401,7 +436,7 @@ export async function listarAplicaciones(opciones) {
     return listarAplicacionesSimulado(opciones);
 }
 
-export async function obtenerAplicacion(clientId) {
+async function obtenerAplicacionSimulado(clientId) {
     await esperarConSesion();
     const encontrada = aplicaciones.find(function (candidata) {
         return candidata.clientId === clientId;
@@ -412,7 +447,56 @@ export async function obtenerAplicacion(clientId) {
     return {exito: true, aplicacion: encontrada, cantidadUsuarios: contarUsuarios(clientId)};
 }
 
-export async function listarRoles(clientId) {
+async function obtenerAplicacionReal(clientId) {
+    const resultado = await llamarConSesion("GET", "/platform/applications/" + clientId, undefined);
+    if (!resultado.ok) {
+        return {exito: false};
+    }
+    const a = resultado.datos;
+    return {
+        exito: true,
+        aplicacion: {clientId: a.client_id, nombre: a.nombre, descripcion: a.descripcion},
+        cantidadUsuarios: a.cantidad_usuarios
+    };
+}
+
+export async function obtenerAplicacion(clientId) {
+    if (OBTENER_APLICACION_REAL) {
+        return obtenerAplicacionReal(clientId);
+    }
+    return obtenerAplicacionSimulado(clientId);
+}
+
+function traducirRol(rol) {
+    return {
+        id: rol.id,
+        nombre: rol.nombre,
+        descripcion: rol.descripcion,
+        porDefecto: rol.por_defecto,
+        cantidadUsuarios: rol.cantidad_usuarios,
+        permisos: rol.permisos
+    };
+}
+
+function traducirRolGuardado(datos) {
+    return {
+        exito: true,
+        rol: traducirRol(datos.rol),
+        rolPorDefectoAnterior: datos.rol_por_defecto_anterior
+    };
+}
+
+function traducirErrorGuardarRol(resultado) {
+    if (resultado.estado === 0) {
+        return {exito: false, campo: "general", mensaje: "No se pudo conectar con el servidor. Intente nuevamente."};
+    }
+    if (resultado.datos !== null && resultado.datos.campo === "nombre") {
+        return {exito: false, campo: "nombre", mensaje: resultado.datos.detail};
+    }
+    return {exito: false};
+}
+
+async function listarRolesSimulado(clientId) {
     await esperarConSesion();
 
     const existe = aplicaciones.some(function (candidata) {
@@ -431,7 +515,22 @@ export async function listarRoles(clientId) {
     return {exito: true, roles: rolesDeLaApp};
 }
 
-export async function crearRol(clientId, datos) {
+async function listarRolesReal(clientId) {
+    const resultado = await llamarConSesion("GET", "/platform/applications/" + clientId + "/roles/", undefined);
+    if (!resultado.ok) {
+        return {exito: false};
+    }
+    return {exito: true, roles: resultado.datos.roles.map(traducirRol)};
+}
+
+export async function listarRoles(clientId) {
+    if (ROLES_REAL) {
+        return listarRolesReal(clientId);
+    }
+    return listarRolesSimulado(clientId);
+}
+
+async function crearRolSimulado(clientId, datos) {
     await esperarConSesion();
 
     const existe = aplicaciones.some(function (candidata) {
@@ -476,7 +575,27 @@ export async function crearRol(clientId, datos) {
     return {exito: true, rol: rolNuevo, rolPorDefectoAnterior: anterior};
 }
 
-export async function editarRol(clientId, rolId, datos) {
+async function crearRolReal(clientId, datos) {
+    const resultado = await llamarConSesion("POST", "/platform/applications/" + clientId + "/roles/", {
+        nombre: datos.nombre,
+        descripcion: datos.descripcion,
+        por_defecto: datos.porDefecto,
+        permisos: datos.permisos
+    });
+    if (!resultado.ok) {
+        return traducirErrorGuardarRol(resultado);
+    }
+    return traducirRolGuardado(resultado.datos);
+}
+
+export async function crearRol(clientId, datos) {
+    if (ROLES_REAL) {
+        return crearRolReal(clientId, datos);
+    }
+    return crearRolSimulado(clientId, datos);
+}
+
+async function editarRolSimulado(clientId, rolId, datos) {
     await esperarConSesion();
 
     const rol = roles.find(function (candidato) {
@@ -514,7 +633,27 @@ export async function editarRol(clientId, rolId, datos) {
     return {exito: true, rol: rol, rolPorDefectoAnterior: anterior};
 }
 
-export async function eliminarRol(clientId, rolId) {
+async function editarRolReal(clientId, rolId, datos) {
+    const resultado = await llamarConSesion("PUT", "/platform/applications/" + clientId + "/roles/" + rolId, {
+        nombre: datos.nombre,
+        descripcion: datos.descripcion,
+        por_defecto: datos.porDefecto,
+        permisos: datos.permisos
+    });
+    if (!resultado.ok) {
+        return traducirErrorGuardarRol(resultado);
+    }
+    return traducirRolGuardado(resultado.datos);
+}
+
+export async function editarRol(clientId, rolId, datos) {
+    if (ROLES_REAL) {
+        return editarRolReal(clientId, rolId, datos);
+    }
+    return editarRolSimulado(clientId, rolId, datos);
+}
+
+async function eliminarRolSimulado(clientId, rolId) {
     await esperarConSesion();
 
     const rol = roles.find(function (candidato) {
@@ -536,7 +675,25 @@ export async function eliminarRol(clientId, rolId) {
     return {exito: true, rol: rol};
 }
 
-export async function eliminarAplicacion(clientId) {
+async function eliminarRolReal(clientId, rolId) {
+    const resultado = await llamarConSesion("DELETE", "/platform/applications/" + clientId + "/roles/" + rolId, undefined);
+    if (!resultado.ok) {
+        if (resultado.estado === 409 && resultado.datos && resultado.datos.motivo === "tiene-usuarios") {
+            return {exito: false, motivo: "tiene-usuarios", cantidadUsuarios: resultado.datos.cantidad_usuarios};
+        }
+        return {exito: false};
+    }
+    return {exito: true};
+}
+
+export async function eliminarRol(clientId, rolId) {
+    if (ROLES_REAL) {
+        return eliminarRolReal(clientId, rolId);
+    }
+    return eliminarRolSimulado(clientId, rolId);
+}
+
+async function eliminarAplicacionSimulado(clientId) {
     await esperarConSesion();
 
     const aplicacion = aplicaciones.find(function (candidata) {
@@ -567,7 +724,25 @@ export async function eliminarAplicacion(clientId) {
     return {exito: true, aplicacion: aplicacion, rolesEliminados: cantidadRoles};
 }
 
-export async function listarUsuarios(clientId, opciones) {
+async function eliminarAplicacionReal(clientId) {
+    const resultado = await llamarConSesion("DELETE", "/platform/applications/" + clientId, undefined);
+    if (!resultado.ok) {
+        if (resultado.estado === 409 && resultado.datos && resultado.datos.motivo === "tiene-usuarios") {
+            return {exito: false, motivo: "tiene-usuarios", cantidadUsuarios: resultado.datos.cantidad_usuarios};
+        }
+        return {exito: false};
+    }
+    return {exito: true};
+}
+
+export async function eliminarAplicacion(clientId) {
+    if (ELIMINAR_APLICACION_REAL) {
+        return eliminarAplicacionReal(clientId);
+    }
+    return eliminarAplicacionSimulado(clientId);
+}
+
+async function listarUsuariosSimulado(clientId, opciones) {
     await esperarConSesion();
 
     const existe = aplicaciones.some(function (candidata) {
@@ -594,7 +769,26 @@ export async function listarUsuarios(clientId, opciones) {
     return {exito: true, usuarios: deLaPagina.map(describirUsuario), total: deLaApp.length};
 }
 
-export async function editarUsuario(clientId, usuarioId, datos) {
+async function listarUsuariosReal(clientId, opciones) {
+    const resultado = await llamarConSesion(
+        "GET",
+        "/platform/applications/" + clientId + "/users/?pagina=" + opciones.pagina + "&tamanio=" + opciones.tamanio,
+        undefined
+    );
+    if (!resultado.ok) {
+        return {exito: false};
+    }
+    return {exito: true, usuarios: resultado.datos.usuarios, total: resultado.datos.total};
+}
+
+export async function listarUsuarios(clientId, opciones) {
+    if (USUARIOS_REAL) {
+        return listarUsuariosReal(clientId, opciones);
+    }
+    return listarUsuariosSimulado(clientId, opciones);
+}
+
+async function editarUsuarioSimulado(clientId, usuarioId, datos) {
     await esperarConSesion();
 
     const usuario = usuarios.find(function (candidato) {
@@ -633,7 +827,42 @@ export async function editarUsuario(clientId, usuarioId, datos) {
     return {exito: true, usuario: describirUsuario(usuario)};
 }
 
-export async function eliminarUsuario(clientId, usuarioId) {
+function traducirErrorUsuario(resultado) {
+    const datos = resultado.datos;
+    if (datos !== null) {
+        if (datos.motivo === "usuario-inexistente") {
+            return {exito: false, motivo: "usuario-inexistente"};
+        }
+        if (datos.motivo === "rol-inexistente") {
+            return {exito: false, motivo: "rol-inexistente", rolId: datos.rol_id};
+        }
+        if (datos.campo && datos.campo !== "general") {
+            return {exito: false, campo: datos.campo};
+        }
+    }
+    return {exito: false};
+}
+
+async function editarUsuarioReal(clientId, usuarioId, datos) {
+    const resultado = await llamarConSesion("PUT", "/platform/applications/" + clientId + "/users/" + usuarioId, {
+        nombre: datos.nombre,
+        apellido: datos.apellido,
+        roles: datos.roles
+    });
+    if (!resultado.ok) {
+        return traducirErrorUsuario(resultado);
+    }
+    return {exito: true, usuario: resultado.datos};
+}
+
+export async function editarUsuario(clientId, usuarioId, datos) {
+    if (USUARIOS_REAL) {
+        return editarUsuarioReal(clientId, usuarioId, datos);
+    }
+    return editarUsuarioSimulado(clientId, usuarioId, datos);
+}
+
+async function eliminarUsuarioSimulado(clientId, usuarioId) {
     await esperarConSesion();
 
     const usuario = usuarios.find(function (candidato) {
@@ -652,4 +881,22 @@ export async function eliminarUsuario(clientId, usuarioId) {
     guardarRoles();
 
     return {exito: true, usuario: eliminado};
+}
+
+async function eliminarUsuarioReal(clientId, usuarioId) {
+    const resultado = await llamarConSesion("DELETE", "/platform/applications/" + clientId + "/users/" + usuarioId, undefined);
+    if (!resultado.ok) {
+        if (resultado.datos !== null && resultado.datos.motivo === "usuario-inexistente") {
+            return {exito: false, motivo: "usuario-inexistente"};
+        }
+        return {exito: false};
+    }
+    return {exito: true};
+}
+
+export async function eliminarUsuario(clientId, usuarioId) {
+    if (USUARIOS_REAL) {
+        return eliminarUsuarioReal(clientId, usuarioId);
+    }
+    return eliminarUsuarioSimulado(clientId, usuarioId);
 }
