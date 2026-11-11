@@ -49,15 +49,27 @@ def autenticar_usuario(email: str, password: str) -> dict:
 
 
 def buscar_por_id(id_usuario: str):
-    """Devuelve los datos del administrador o None si no existe."""
+    """Devuelve los datos del administrador, con el nombre de su organización, o None si no existe."""
     with _conectar() as conn:
         fila = conn.execute(
-            "SELECT id, nombre, apellido, email, organizacion_id FROM administrador WHERE id = %s",
+            """
+            SELECT a.id, a.nombre, a.apellido, a.email, a.organizacion_id, o.nombre
+            FROM administrador a
+            JOIN organizacion o ON o.id = a.organizacion_id
+            WHERE a.id = %s
+            """,
             (id_usuario,),
         ).fetchone()
     if fila is None:
         return None
-    return {"id": fila[0], "nombre": fila[1], "apellido": fila[2], "email": fila[3], "organizacion_id": fila[4]}
+    return {
+        "id": fila[0],
+        "nombre": fila[1],
+        "apellido": fila[2],
+        "email": fila[3],
+        "organizacion_id": fila[4],
+        "organizacion": fila[5],
+    }
 
 
 # ── Usuarios de aplicación (tabla: usuario) ──────────────────────

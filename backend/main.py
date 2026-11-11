@@ -1,6 +1,6 @@
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 from app.dependencies import usuario_actual
 from app.services.auth import crear_token
@@ -18,11 +18,11 @@ app.include_router(applications_router)
 app.include_router(auth_api_router)
 
 class RegistroEntrada(BaseModel):
-    nombre: str
-    apellido: str
-    email: EmailStr  # FastAPI rechaza con 422 si no tiene formato de email
-    password: str
-    organizacion: str
+    nombre: str = Field(max_length=100)
+    apellido: str = Field(max_length=100)
+    email: EmailStr = Field(max_length=254)  # FastAPI rechaza con 422 si no tiene formato de email
+    password: str = Field(max_length=128)
+    organizacion: str = Field(max_length=200)
     cuit: str
 
 

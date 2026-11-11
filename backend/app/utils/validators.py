@@ -1,6 +1,7 @@
 import re
 
 LARGO_MINIMO = 10
+LARGO_MAXIMO = 128
 
 
 def normalizar_email(email: str) -> str:
@@ -13,6 +14,8 @@ def validar_password(password: str) -> None:
 
     if len(password) < LARGO_MINIMO:
         errores.append(f"debe tener al menos {LARGO_MINIMO} caracteres")
+    if len(password) > LARGO_MAXIMO:
+        errores.append(f"no puede superar los {LARGO_MAXIMO} caracteres")
     if not re.search(r"[A-ZÁÉÍÓÚÑ]", password):
         errores.append("debe incluir una mayúscula")
     if not re.search(r"[a-záéíóúñ]", password):
