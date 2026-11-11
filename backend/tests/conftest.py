@@ -37,8 +37,14 @@ def _borrar_datos_de_prueba():
                 (f"{PREFIJO_CUIT}%", f"%{DOMINIO_TEST}"),
             ).fetchall()
         ]
+        apps = [f[0] for f in conn.execute(
+            "SELECT client_id FROM aplicacion WHERE organizacion_id = ANY(%s)", (orgs,)
+        ).fetchall()]
         conn.execute("DELETE FROM codigo_administrador WHERE email LIKE %s", (f"%{DOMINIO_TEST}",))
         conn.execute("DELETE FROM codigo_usuario WHERE email LIKE %s", (f"%{DOMINIO_TEST}",))
+        # los usuarios y sus roles van antes que la aplicación (la base no deja borrar una aplicación con usuarios)
+        conn.execute("DELETE FROM usuario_rol WHERE aplicacion_id = ANY(%s)", (apps,))
+        conn.execute("DELETE FROM usuario WHERE aplicacion_id = ANY(%s)", (apps,))
         conn.execute("DELETE FROM aplicacion WHERE organizacion_id = ANY(%s)", (orgs,))
         conn.execute("DELETE FROM administrador WHERE organizacion_id = ANY(%s)", (orgs,))
         conn.execute("DELETE FROM organizacion WHERE id = ANY(%s)", (orgs,))
@@ -70,3 +76,37 @@ def headers_de(admin=ADMIN):
         "/login", json={"email": admin["email"], "password": admin["password"]}
     ).json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
+
+
+OTRO_ADMIN = {**ADMIN, "email": f"bruno{DOMINIO_TEST}", "cuit": f"{PREFIJO_CUIT}2", "organizacion": "Otra org"}
+CERO = "00000000-0000-0000-0000-000000000000"
+
+
+def crear_app(headers, nombre="App de prueba"):
+    """Devuelve {nombre, client_id, client_secret}."""
+    return client.post("/platform/applications/", json={"nombre": nombre}, headers=headers).json()
+
+
+def crear_rol(headers, client_id, nombre, por_defecto=False, permisos=()):
+    r = client.post(
+        f"/platform/applications/{client_id}/roles/",
+        json={"nombre": nombre, "por_defecto": por_defecto, "permisos": list(permisos)},
+        headers=headers,
+    )
+    return r.json()["rol"]
+
+
+def insertar_usuario(client_id, nombre, apellido, email, roles):
+    """Crea un usuario directo en la base (el panel no crea usuarios: se registran por la API, CU-05)."""
+    with obtener_conexion() as conn:
+        usuario_id = conn.execute(
+            "INSERT INTO usuario (aplicacion_id, nombre, apellido, email, hash_contrasena) "
+            "VALUES (%s, %s, %s, %s, 'hash-de-prueba') RETURNING id",
+            (client_id, nombre, apellido, email),
+        ).fetchone()[0]
+        for rol_id in roles:
+            conn.execute(
+                "INSERT INTO usuario_rol (usuario_id, rol_id, aplicacion_id) VALUES (%s, %s, %s)",
+                (usuario_id, rol_id, client_id),
+            )
+    return str(usuario_id)

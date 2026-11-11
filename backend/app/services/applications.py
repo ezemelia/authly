@@ -8,7 +8,9 @@ class NombreAppDuplicado(Exception):
     pass 
 
 class AplicacionConUsuarios(Exception):
-    pass
+    def __init__(self, cantidad: int):
+        super().__init__(f"No se puede eliminar: la aplicación tiene {cantidad} usuario(s) asociado(s).")
+        self.cantidad = cantidad
 
 
 def _conectar():
@@ -34,7 +36,7 @@ def crear_aplicacion(nombre: str, descripcion: str, organizacion_id) -> dict:
             (organizacion_id, nombre),
         ).fetchone()
         if existe:
-            raise NombreAppDuplicado(f"Ya existe una aplicación con el nombre '{nombre}'")
+            raise NombreAppDuplicado(f"Ya existe una aplicación con el nombre '{nombre}'.")
         fila = conn.execute(
             """
             INSERT INTO aplicacion (organizacion_id, nombre, descripcion, hash_secret)
@@ -116,7 +118,7 @@ def obtener_aplicacion(client_id, organizacion_id) -> dict:
         ).fetchone()
 
     if fila is None:
-        raise ValueError("Aplicación no encontrada")
+        raise ValueError("Aplicación no encontrada.")
 
     return {
         "client_id": str(fila[0]),
@@ -141,7 +143,7 @@ def regenerar_secret(client_id, organizacion_id) -> dict:
         ).fetchone()
 
     if fila is None:
-        raise ValueError("Aplicación no encontrada")
+        raise ValueError("Aplicación no encontrada.")
 
     return {"client_id": str(fila[0]), "client_secret": client_secret}
 
@@ -149,7 +151,7 @@ def editar_aplicacion(client_id, nombre: str, descripcion: str, organizacion_id)
     nombre = nombre.strip()
     descripcion = (descripcion or "").strip()
     if not nombre:
-        raise ValueError("El nombre es obligatorio")
+        raise ValueError("El nombre es obligatorio.")
 
     with _conectar() as conn:
         # verificar que no exista otra app con ese nombre en la misma org
@@ -158,7 +160,7 @@ def editar_aplicacion(client_id, nombre: str, descripcion: str, organizacion_id)
             (organizacion_id, nombre, client_id),
         ).fetchone()
         if duplicada:
-            raise NombreAppDuplicado(f"Ya existe una aplicación con el nombre '{nombre}'")
+            raise NombreAppDuplicado(f"Ya existe una aplicación con el nombre '{nombre}'.")
 
         fila = conn.execute(
             """
@@ -171,7 +173,7 @@ def editar_aplicacion(client_id, nombre: str, descripcion: str, organizacion_id)
         ).fetchone()
 
     if fila is None:
-        raise ValueError("Aplicación no encontrada")
+        raise ValueError("Aplicación no encontrada.")
 
     return {"client_id": str(fila[0]), "nombre": fila[1], "descripcion": fila[2]}
 
@@ -185,7 +187,7 @@ def eliminar_aplicacion(client_id, organizacion_id) -> None:
         ).fetchone()
 
         if app is None:
-            raise ValueError("Aplicación no encontrada")
+            raise ValueError("Aplicación no encontrada.")
 
         # Verificar usuarios asociados
         conteo = conn.execute(
@@ -194,9 +196,7 @@ def eliminar_aplicacion(client_id, organizacion_id) -> None:
         ).fetchone()[0]
 
         if conteo > 0:
-            raise AplicacionConUsuarios(
-                f"No se puede eliminar: la aplicación tiene {conteo} usuario(s) asociado(s)"
-            )
+            raise AplicacionConUsuarios(conteo)
 
         conn.execute(
             "DELETE FROM aplicacion WHERE client_id = %s AND organizacion_id = %s",

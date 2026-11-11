@@ -9,12 +9,23 @@ from app.services.users import (
     autenticar_usuario, CredencialesInvalidas,
 )
 
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from app.errors import manejar_error_http
 from app.routers.applications import router as applications_router
+from app.routers.recuperacion import router as recuperacion_router
+from app.routers.roles import router as roles_router
+from app.routers.usuarios import router as usuarios_router
 from app.routers.auth_api import router as auth_api_router
 
 app = FastAPI(title="Authly")
 
+app.add_exception_handler(StarletteHTTPException, manejar_error_http)  # mismo formato de error en todo el panel
+
 app.include_router(applications_router)
+app.include_router(roles_router)
+app.include_router(usuarios_router)
+app.include_router(recuperacion_router)
 app.include_router(auth_api_router)
 
 class RegistroEntrada(BaseModel):
