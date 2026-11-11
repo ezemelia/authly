@@ -53,19 +53,33 @@ def obtener_clave_publica():
 
 @router.post("/login")
 def login_usuario(datos: LoginUsuarioEntrada, app: dict = Depends(aplicacion_actual)):
-    """CU-07: Login de usuario de una aplicación externa.
-    Requiere X-Client-Id y X-Client-Secret en headers.
-    """
     try:
         usuario = autenticar_usuario_app(datos.email, datos.password, app["id"])
     except CredencialesInvalidas as e:
         raise HTTPException(status_code=401, detail=str(e))
+
+    # Obtener roles del usuario para hint de UI
+    conn = obtener_conexion()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT r.nombre FROM authly.rol r
+                JOIN authly.usuario_rol ur ON ur.rol_id = r.id
+                WHERE ur.usuario_id = %s
+                """,
+                (usuario["id"],),
+            )
+            roles = [fila[0] for fila in cur.fetchall()]
+    finally:
+        conn.close()
 
     token = crear_token({
         "sub": usuario["id"],
         "type": "user",
         "org_id": app["organizacion_id"],
         "app_id": app["id"],
+        "roles": roles,
     })
 
     return {
