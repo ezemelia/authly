@@ -43,6 +43,11 @@ class ResetearPasswordEntrada(BaseModel):
     codigo: str
     new_password: str
 
+class VerificarPermisoEntrada(BaseModel):
+    user_id: str
+    resource: str
+    action: str
+
 @router.get("/public-key")
 def obtener_clave_publica():
     """CU-08: Devuelve la clave pública RSA para verificar tokens JWT.
@@ -297,3 +302,48 @@ def resetear_password(datos: ResetearPasswordEntrada, app: dict = Depends(aplica
         conn.close()
 
     return {"message": "Contraseña actualizada exitosamente."}
+
+@router.post("/permissions/verify")
+def verificar_permiso(datos: VerificarPermisoEntrada, app: dict = Depends(aplicacion_actual)):
+    """CU-09: Verifica si un usuario tiene un permiso específico en esta aplicación."""
+    user_id = datos.user_id.strip()
+    recurso = datos.resource.strip().lower()
+    accion = datos.action.strip().lower()
+
+    if not user_id or not recurso or not accion:
+        raise HTTPException(status_code=400, detail="user_id, resource y action son obligatorios")
+
+    conn = obtener_conexion()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Error de conexión a la base de datos")
+
+    try:
+        with conn.cursor() as cur:
+            # Verificar que el usuario existe en esta aplicación
+            cur.execute(
+                "SELECT 1 FROM authly.usuario WHERE id = %s AND aplicacion_id = %s",
+                (user_id, app["id"]),
+            )
+            if cur.fetchone() is None:
+                raise HTTPException(status_code=404, detail="Usuario no encontrado en esta aplicación")
+
+            # Verificar permiso con EXISTS (optimizado, no trae todos los permisos)
+            cur.execute(
+                """
+                SELECT EXISTS (
+                    SELECT 1
+                    FROM authly.usuario_rol ur
+                    JOIN authly.permiso p ON p.rol_id = ur.rol_id
+                    WHERE ur.usuario_id = %s
+                      AND ur.aplicacion_id = %s
+                      AND p.recurso = %s
+                      AND p.accion = %s
+                )
+                """,
+                (user_id, app["id"], recurso, accion),
+            )
+            tiene_permiso = cur.fetchone()[0]
+    finally:
+        conn.close()
+
+    return {"allowed": tiene_permiso}
