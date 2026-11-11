@@ -105,9 +105,12 @@ def obtener_aplicacion(client_id, organizacion_id) -> dict:
     with _conectar() as conn:
         fila = conn.execute(
             """
-            SELECT client_id, nombre, descripcion, creado_en
-            FROM aplicacion
-            WHERE client_id = %s AND organizacion_id = %s
+            SELECT a.client_id, a.nombre, a.descripcion, a.creado_en,
+                   COUNT(u.id) AS cantidad_usuarios
+            FROM aplicacion a
+            LEFT JOIN usuario u ON u.aplicacion_id = a.client_id
+            WHERE a.client_id = %s AND a.organizacion_id = %s
+            GROUP BY a.client_id, a.nombre, a.descripcion, a.creado_en
             """,
             (client_id, organizacion_id),
         ).fetchone()
@@ -120,6 +123,7 @@ def obtener_aplicacion(client_id, organizacion_id) -> dict:
         "nombre": fila[1],
         "descripcion": fila[2],
         "creado_en": fila[3].isoformat(),
+        "cantidad_usuarios": fila[4],
     }
 
 def regenerar_secret(client_id, organizacion_id) -> dict:
