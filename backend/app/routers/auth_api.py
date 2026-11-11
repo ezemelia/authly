@@ -181,7 +181,6 @@ def verificar_registro(datos: VerificarRegistroEntrada, app: dict = Depends(apli
             raise HTTPException(status_code=400, detail=str(e))
 
         # crear usuario + asignar rol (atómico)
-        from argon2 import PasswordHasher
         hasher = PasswordHasher()
         hash_password = hasher.hash(datos.password)
 
