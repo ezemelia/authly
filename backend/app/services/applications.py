@@ -5,6 +5,9 @@ from app.database import obtener_conexion
 
 
 class NombreAppDuplicado(Exception):
+    pass 
+
+class AplicacionConUsuarios(Exception):
     pass
 
 
@@ -44,23 +47,80 @@ def crear_aplicacion(nombre: str, descripcion: str, organizacion_id) -> dict:
     return {"nombre": nombre, "client_id": str(fila[0]), "client_secret": client_secret}
 
 
-def listar_aplicaciones(organizacion_id) -> list:
+def listar_aplicaciones(organizacion_id, pagina: int = 1, tamanio: int = 10) -> dict:
+    offset = (pagina - 1) * tamanio
+
     with _conectar() as conn:
+        # Total de aplicaciones (para paginación)
+        total_apps = conn.execute(
+            "SELECT COUNT(*) FROM aplicacion WHERE organizacion_id = %s",
+            (organizacion_id,),
+        ).fetchone()[0]
+
+        # Aplicaciones con conteo de usuarios, ordenadas por nombre
         filas = conn.execute(
             """
-            SELECT client_id, nombre, descripcion, creado_en
-            FROM aplicacion
-            WHERE organizacion_id = %s
-            ORDER BY creado_en DESC
+            SELECT a.client_id, a.nombre, a.descripcion, a.creado_en,
+                COUNT(u.id) AS cantidad_usuarios
+            FROM aplicacion a
+            LEFT JOIN usuario u ON u.aplicacion_id = a.client_id
+            WHERE a.organizacion_id = %s
+            GROUP BY a.client_id, a.nombre, a.descripcion, a.creado_en
+            ORDER BY a.nombre ASC
+            LIMIT %s OFFSET %s
             """,
-            (organizacion_id,),
+            (organizacion_id, tamanio, offset),
         ).fetchall()
 
-    return [
-        {"client_id": str(f[0]), "nombre": f[1], "descripcion": f[2], "creado_en": f[3].isoformat()}
+        # Total de usuarios de la organización
+        total_usuarios = conn.execute(
+            """
+            SELECT COUNT(*) FROM usuario u
+            JOIN aplicacion a ON u.aplicacion_id = a.client_id
+            WHERE a.organizacion_id = %s
+            """,
+            (organizacion_id,),
+        ).fetchone()[0]
+
+    aplicaciones = [
+        {
+            "client_id": str(f[0]),
+            "nombre": f[1],
+            "descripcion": f[2],
+            "creado_en": f[3].isoformat(),
+            "cantidad_usuarios": f[4],
+        }
         for f in filas
     ]
 
+    return {
+        "aplicaciones": aplicaciones,
+        "pagina": pagina,
+        "tamanio": tamanio,
+        "total_apps": total_apps,
+        "total_usuarios_organizacion": total_usuarios,
+    }
+
+def obtener_aplicacion(client_id, organizacion_id) -> dict:
+    with _conectar() as conn:
+        fila = conn.execute(
+            """
+            SELECT client_id, nombre, descripcion, creado_en
+            FROM aplicacion
+            WHERE client_id = %s AND organizacion_id = %s
+            """,
+            (client_id, organizacion_id),
+        ).fetchone()
+
+    if fila is None:
+        raise ValueError("Aplicación no encontrada")
+
+    return {
+        "client_id": str(fila[0]),
+        "nombre": fila[1],
+        "descripcion": fila[2],
+        "creado_en": fila[3].isoformat(),
+    }
 
 def regenerar_secret(client_id, organizacion_id) -> dict:
     client_secret = secrets.token_urlsafe(32)
@@ -114,10 +174,27 @@ def editar_aplicacion(client_id, nombre: str, descripcion: str, organizacion_id)
 
 def eliminar_aplicacion(client_id, organizacion_id) -> None:
     with _conectar() as conn:
-        fila = conn.execute(
-            "DELETE FROM aplicacion WHERE client_id = %s AND organizacion_id = %s RETURNING client_id",
+        # Verificar que existe
+        app = conn.execute(
+            "SELECT client_id FROM aplicacion WHERE client_id = %s AND organizacion_id = %s",
             (client_id, organizacion_id),
         ).fetchone()
 
-    if fila is None:
-        raise ValueError("Aplicación no encontrada")
+        if app is None:
+            raise ValueError("Aplicación no encontrada")
+
+        # Verificar usuarios asociados
+        conteo = conn.execute(
+            "SELECT COUNT(*) FROM usuario WHERE aplicacion_id = %s",
+            (client_id,),
+        ).fetchone()[0]
+
+        if conteo > 0:
+            raise AplicacionConUsuarios(
+                f"No se puede eliminar: la aplicación tiene {conteo} usuario(s) asociado(s)"
+            )
+
+        conn.execute(
+            "DELETE FROM aplicacion WHERE client_id = %s AND organizacion_id = %s",
+            (client_id, organizacion_id),
+        )
