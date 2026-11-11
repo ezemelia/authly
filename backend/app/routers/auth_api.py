@@ -196,8 +196,8 @@ def verificar_registro(datos: VerificarRegistroEntrada, app: dict = Depends(apli
             usuario_id = cur.fetchone()[0]
 
             cur.execute(
-                "INSERT INTO authly.usuario_rol (usuario_id, rol_id) VALUES (%s, %s)",
-                (usuario_id, rol_id),
+                "INSERT INTO authly.usuario_rol (usuario_id, rol_id, aplicacion_id) VALUES (%s, %s, %s)",
+                (usuario_id, rol_id, app["id"]),
             )
 
         conn.commit()

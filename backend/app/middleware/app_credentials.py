@@ -36,7 +36,7 @@ def aplicacion_actual(
         raise HTTPException(status_code=401, detail="Credenciales de aplicación inválidas")
 
     return {
-        "id": client_id,
+        "id": str(client_id),
         "nombre": nombre,
         "organizacion_id": str(org_id),
     }
