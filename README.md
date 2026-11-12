@@ -67,23 +67,26 @@ docker compose up --build
 authly/
 ├── backend/
 │   ├── app/
-│   │   ├── middleware/       # Middleware de credenciales
-│   │   ├── routers/          # Endpoints de la API
-│   │   ├── services/         # Lógica de negocio
-│   │   └── utils/            # Validadores y utilidades
+│   │   ├── middleware/       # Credenciales de aplicación (X-Client-Id / X-Client-Secret)
+│   │   ├── routers/          # Endpoints: aplicaciones, roles, usuarios, recuperación, auth externa
+│   │   ├── services/         # Lógica de negocio de cada área
+│   │   ├── utils/            # Validadores y utilidades
+│   │   └── errors.py         # Formato de error único para todas las rutas del panel
 │   ├── keys/                 # Claves públicas/privadas JWT
 │   ├── tests/                # Tests unitarios (pytest)
 │   ├── Dockerfile
 │   ├── main.py
+│   ├── README.md
 │   └── requirements.txt
 ├── frontend/
 │   ├── assets/               # Imágenes y recursos
-│   ├── css/                  # Estilos
-│   ├── js/                   # Lógica del cliente
-│   │   ├── app/              # Módulos del panel de admin
-│   │   └── modules/          # Módulos compartidos
-│   └── *.html                # Páginas
-├── docs/                     # Documentación del proyecto
+│   ├── css/                  # Estilos, incluidas las transiciones y animaciones
+│   ├── js/
+│   │   ├── app/              # Módulos del panel: aplicaciones, roles, usuarios
+│   │   └── modules/          # Módulos compartidos (api, auth, components, notifications...)
+│   ├── *.html                # Páginas
+│   └── README.md
+├── docs/                     # Documentación, diagramas y manual de usuario
 ├── compose.yml
 ├── .env.example
 └── GUIA_CAMBIOS.md
